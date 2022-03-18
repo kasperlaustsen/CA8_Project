@@ -1,0 +1,7 @@
+
+ScaledNPoly folder should be in path
+
+load mat file
+
+then call poly evaluation:
+volume_flow = fan_airflow_poly.Evaluate(speed_rpm);
