@@ -13,7 +13,9 @@ end
 
 % Range limit inputs
 for(k=1:n_inputs)
-  indepvar(:,k) = LimitValues(indepvar(:,k), obj.MinValidIn(k), obj.MaxValidIn(k));
+  indepvar(:,k) = LimitValue(indepvar(:,k), obj.MinValidIn(k), obj.MaxValidIn(k));
+%   indepvar(:,k) = LimitValues(indepvar(:,k), obj.MinValidIn(k), obj.MaxValidIn(k));
+
 end
 
 % Scale inputs
