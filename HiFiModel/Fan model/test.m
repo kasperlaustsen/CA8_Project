@@ -9,3 +9,13 @@ volume_flow = fan_airflow_poly.Evaluate(speed_rpm)
 
 % volume_flow * 3600	% CMH, fits in between point 1 and 2 in datasheet, with
 					% a pressure increase across fan.  
+
+
+load("fan_power_poly.mat")
+
+speed_rpm = 0
+% then call poly evaluation:
+heatloss = fan_airflow_poly.Evaluate(speed_rpm)
+
+% volume_flow * 3600	% CMH, fits in between point 1 and 2 in datasheet, with
+					% a pressure increase across fan.  
