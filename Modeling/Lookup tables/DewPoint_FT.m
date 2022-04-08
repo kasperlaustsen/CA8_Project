@@ -25,7 +25,7 @@ plot(T,enthalpy);                            % Plot nonlinear p-h relationship
 
 % Linearize in x0
 % ---------------------------------------
-p0 = 1;                                            % Pressure operating point
+p0 = 1;                                             % Pressure operating point
 delta_X = 0.001;                                    % Slope calculation width (keep it small)
 linearOffset = ref.HDewP(p0);                       % Calculate f(p0) and f'(p0)
 linearSlope = ( ref.HDewP(p0 + delta_X) - ref.HDewP(p0 - delta_X) ) / (2*delta_X);  
@@ -51,3 +51,6 @@ enthalpy_linear = linearOffset + linearSlope * (pressure-p0);
 % ----------------------------
     [h_bub] = DewPointLinearization(p, p0, "Bub")       % Takes either a scalar or vector p
     [h_HTP] = DewPointLinearization(p, p0, "HTP",T)       % Takes either a scalar or vector p
+
+
+
