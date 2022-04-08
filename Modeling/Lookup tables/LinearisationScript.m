@@ -8,20 +8,22 @@ delta_X = 0.001;                                       % Slope calculation width
 % ========================================================================
 % Operating point
 % ========================================================================
-T1_op        = 45;
-% T1_op        = out.logsout{26}.Values.Data(end,3);
-T2_op        = 33.6;
-% T2_op        = out.logsout{27}.Values.Data(end,3);
-T3_op        = 48.2;    % found from Kresten Sim
+T1_op        = 33.6;
+% T1_op        = out.logsout{27}.Values.Data(end,3);
+T2_op        = 22.2;
+% T2_op        = out.logsout{28}.Values.Data(end,3);
+T3_op        = 48.3;    % found from Kresten Sim
 % T3_op        = out.logsout{25}.Values.Data(end,3);
-T7_op        = 22.2;
-% T7_op        = out.logsout{28}.Values.Data(end,3);
+T7_op        = -5.5;
+% T7_op        = out.logsout{26}.Values.Data(end,3);
 pi1_com1_op  = 10;
 pi1_com2_op  = 10;
-p1_op        = 1.9;
-% p1_op        = out.logsout{26}.Values.Data(end,1);
+p1_op        = 4.5;
+% p1_op        = out.logsout{28}.Values.Data(end,1);
 p2_op        = 7.8;
 % p2_op        = out.logsout{25}.Values.Data(end,1);
+p5_op        = 1.9;
+% p5_op        = out.logsout{26}.Values.Data(end,1);
 
 hv_op        = 10;
 Vi_op        = 1;
