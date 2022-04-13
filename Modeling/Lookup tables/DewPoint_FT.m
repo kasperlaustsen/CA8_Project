@@ -15,7 +15,7 @@ clc;clear;close all;
 ref = CoolPropPyWrapper('HEOS::R134a');             % Initialize refridgerant
 
 %pressure = 0.01:0.01:40;                            % Define pressure vector for plotting
-pressure = 1 * ones(1,2201);
+pressure = 1.9 * ones(1,2201);
 %T = 20 * ones(1,4000);
 T = -100:0.5:1000;
 enthalpy = ref.HTP(T,pressure);                     % Define enthalpy vector for plotting
