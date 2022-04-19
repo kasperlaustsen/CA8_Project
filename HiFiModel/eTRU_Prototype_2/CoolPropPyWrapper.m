@@ -415,7 +415,7 @@ classdef CoolPropPyWrapper < handle
     end
     
     function p = PHD(obj, h, d)
-      p = PropsSI('P', 'H', h, 'D', d, obj.Refrigerant) - 273.15;
+      p = PropsSI('P', 'H', h, 'D', d, obj.Refrigerant)/100000;
     end
         
     % TPS
