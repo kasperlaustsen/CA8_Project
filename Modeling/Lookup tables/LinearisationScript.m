@@ -89,8 +89,8 @@ delta_X = 0.000001;                                       % Slope calculation wi
 % ---------------------------------------
 hv_op = 392030;
 Vi_op = 0.0119;
-Vl_op = 0.0119/2;
-m0 = 2; 
+Vl_op = 0.01;
+m0 = 1; 
 linearOffset_p5 = ref.PHD(hv_op, m0/(Vi_op-Vl_op))                       % Calculate f(p0) and f'(p0)
 linearSlope_p5 = (ref.PHD(hv_op, (m0+delta_X)/(Vi_op-Vl_op)) -  ref.PHD(hv_op, (m0-delta_X)/(Vi_op-Vl_op)) ) / (2*delta_X)  % linearised w. respect to h
 
