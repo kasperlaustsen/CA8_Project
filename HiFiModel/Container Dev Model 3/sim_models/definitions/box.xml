@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="box">
+
+<inputs>
+  <input name="Tamb" type="Temperature" min="-40" max="80" description="Ambient Temperature [deg-c]"/>
+  <input name="Tsup" type="Temperature" min="-40" max="80" description="Supply Air Temperature [deg-c]"/>
+  <input name="vfan" type="Signal" min="0" max="50" description="Evaporator Fan Speed"/>
+  <input name="QHeat" type="Signal" min="0" max="50" description="Additional heat added to the box"/>
+  <input name="mdotair" type="Signal" min="0" max="50" description="Air mass flow forced by evap fans"/>
+</inputs>
+
+<states>
+  <state name="Tret" type="Temperature" min="-40" max="80" default="-1" description="Return Air Temperature [deg-c]"/>
+  <state name="Talu" type="Temperature" min="-40" max="80" default="-1" description="Temperature [deg-c]"/>
+  <state name="Tcargo" type="Temperature" min="-40" max="80" default="-1" description="Temperature [deg-c]"/>
+  <state name="Tret2" type="Temperature" min="-40" max="80" default="-1" description="Temperature [deg-c]"/>
+  <state name="RH" type="Humidity" min="0" max="100" default="70" description="Relative Humidity [%]"/>
+</states>
+
+<filename>cont_box.m</filename>
+
+<simulation method="ode15s" call="cont_box"/>
+
+</component>

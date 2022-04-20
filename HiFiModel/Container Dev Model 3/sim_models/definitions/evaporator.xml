@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<component name="evaporator">
+ <!-- Input section. Inputs must be listed in the correct order --> 
+<inputs>
+  <input name="pin" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+  <input name="hin" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="mdotout" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  <input name="Tret" type="Temperature" min="-40" max="110" description="Return Air Temperature [deg-C]"/>
+  <input name="vfan" type="Number" min="0" max="2" description="Fan Speed [OFF/LOW/HIGH]"/>
+  <input name="Vexp" type="Signal" min="0" max="100" description="Percent [%]"/>
+  <input name="Hevap" type="Signal" min="0" max="100" description="Percent [%]"/>  
+  <input name="Tamb" type="Temperature" min="-40" max="110" description="Ambient Air Temperature [deg-C]"/>
+  <input name="FaultMode" type="Number" min="0" max="3" description="Fault mode of the evaporator"/>
+</inputs>
+
+ <!-- State section. States must be listed in the 
+correct order --> <states>
+  <state name="pout" type="Pressure" min="0" max="50" default="3" description="Pressure [Bar]"/>
+  <state name="hout" type="Enthalpy" min="0" max="50" default="400000" description="Enthalpy [J/kg]"/>
+  <state name="mdotin" type="Mass Flow" min="0" max="50" default="0.0" description="Mass flow [kg/s]"/>
+  <state name="sigma" type="Dimensionless" min="0" max="50" default="0.9" description="[ ]"/>
+  <state name="h1" type="Enthalpy" min="0" max="50" default="280000" description="Enthalpy [J/kg]"/>
+  <state name="m1" type="Mass" min="0" max="50" default="1" description="Mass [kg]"/>
+  <state name="m2" type="Mass" min="0" max="50" default="0.1" description="Mass [kg]"/>
+  <state name="Tm1" type="Temperature" min="-40" max="50" default="0" description="Metal temperature [deg-c]"/>
+  <state name="Tm2" type="Temperature" min="-40" max="50" default="0" description="Metal temperature [deg-c]"/>
+  <state name="Tsup" type="Temperature" min="-40" max="50" default="0" description="Supply Air Temp [deg-c]"/>
+  <state name="Tsuc" type="Temperature" min="-40" max="50" default="0" description="Suction Temp [deg-c]"/>
+  <state name="Tevap" type="Temperature" min="-40" max="50" default="0" description="Suction Temp [deg-c]"/>
+  <state name="T0" type="Temperature" min="-40" max="50" default="0" description="T0 [deg-c]"/>
+  <state name="Tretm" type="Temperature" min="-40" max="50" default="0" description="Measured Tret [deg-c]"/>
+  <state name="Tsupm1" type="Temperature" min="-40" max="50" default="0" description="Measured Tsup1 [deg-c]"/>
+  <state name="Tsupm2" type="Temperature" min="-40" max="50" default="0" description="Measured Tsup2 [deg-c]"/>
+  <state name="mdotair" type="AirFlow" min="-40" max="50" default="0" description="Air Flow"/>
+</states> 
+<!-- Refpipe section. Defines the refrigeration pipes 
+of the component  --> <refpipes>
+  <pipe type="in"  conid="ref_input_a">
+    <input name="pin" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotin" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_a">
+    <state name="pout" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <input name="mdotout" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+</refpipes>
+
+ <control_inputs>
+  <input name="Ta" type="Temperature" min="-40" max="110" description="Air Temperature [deg-C]"/>
+  <input name="vfan" type="Number" min="0" max="2" description="Fan Speed [OFF/LOW/HIGH]"/>
+</control_inputs>
+
+<!-- Name of the model .m file -->
+ <filename>evaporator.m</filename>
+
+<simulation method="ode23s" call="evaporator"/>
+
+</component>

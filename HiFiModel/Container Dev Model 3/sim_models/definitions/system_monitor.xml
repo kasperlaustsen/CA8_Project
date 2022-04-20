@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="SysMon">
+
+<inputs>
+  <input name="evap_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="evap_Tsuc" type="Enthalpy" min="0" max="500000" description="Suction Temperature"/>
+  <input name="econ_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="econ_Tsuc" type="Enthalpy" min="0" max="500000" description="Suction Temperature"/>
+  <input name="pdis" type="Pressure" min="0" max="50" description="Dicharge Pressure"/>
+  <input name="hdis" type="Enthalpy" min="0" max="500000" description="Dicharge Enthalpy"/>
+  <input name="Tret" type="Temperature" min="-40" max="100" description="Air Return Temperature"/>
+  <input name="Tsup1" type="Temperature" min="-40" max="100" description="Air Supply Temperature 1"/>
+  <input name="Tsup2" type="Temperature" min="-40" max="100" description="Air Supply Temperature 2"/>
+  <input name="Tcargo" type="Temperature" min="-40" max="100" description="Cargo Temperature"/>
+  <input name="Tfc"  type="Temperature" min="-40" max="100" description="FC Temperature"/>
+  <input name="Tamb"  type="Temperature" min="-40" max="100" description="Ambient Temperature"/>
+  <input name="Tset"  type="Temperature" min="-40" max="100" description="Temperature set-point"/>
+  <input name="RH"  type="Humidity" min="0" max="100" description="Relative humidity measurement"/>
+  <input name="Mevap"  type="Temperature" min="0" max="2" description="Evaporator fan speed"/>  
+</inputs>
+
+<states>
+  <state name="QCoolAir" type="Power" min="-4000" max="30000" default="0" description="Cooling capacity [w]"/>
+  <state name="QCondWater" type="Power" min="-4000" max="4000" default="0" description="Water condensation power [w]"/>
+  <state name="QAmb" type="Power" min="-4000" max="4000" default="0" description="Heat influx from ambient [w]"/> 
+  <state name="Tsh"  type="Temperature" min="0" max="100" default="0" description="Evaporator super heat"/> 
+</states>
+
+<filename>system_monitor.m</filename>
+
+<simulation method="call" call="system_monitor"/>
+
+</component>

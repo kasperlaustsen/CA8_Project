@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="controller">
+
+<inputs>
+  <input name="evap_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="evap_hsuc" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="econ_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="econ_hsuc" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="pdis" type="Pressure" min="0" max="50" description="Dicharge Pressure"/>
+  <input name="hdis" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="Tret" type="Temperature" min="-40" max="100" description="Air Return Temperature"/>
+  <input name="Tsup" type="Temperature" min="-40" max="100" description="Air Return Temperature"/>
+  <input name="Tcargo" type="Temperature" min="-40" max="100" description="Cargo Temperature"/>
+  <input name="Talu" type="Temperature" min="-40" max="100" description="Aluminum Temperature"/>
+  <input name="Tfc"  type="Temperature" min="-40" max="100" description="FC Temperature"/>
+</inputs>
+
+<states>
+  <state name="evap_vexp" type="Opening" min="0" max="50" default="0" description="Expansion valve opening [%]"/>
+  <state name="econ_vexp" type="Opening" min="0" max="50" default="0" description="Expansion valve opening [%]"/>
+  <state name="cpr_speed" type="control_signal" min="0" max="50" default="0" description="Compressor speed"/> 
+  <state name="Tamb" type="Temperature" min="0" max="50" default="25" description="Ambient Temperature"/>
+  <state name="vfan_cond" type="control_signal" min="0" max="50" default="0" description="Condenser Fan Speed"/>
+  <state name="vfan_evap" type="control_signal" min="0" max="50" default="0" description="Evaporator Fan Speed"/>
+  <state name="evap_Tsuc" type="control_signal" min="-40" max="50" default="0" description="Evaporator Suction Temperature"/>
+  <state name="intg_vexp" type="" min="0" max="50" default="0" description=""/>
+  <state name="intg_cpr" type="" min="0" max="50" default="0" description=""/>
+  <state name="mcond_cont" type="" min="0" max="50" default="0" description=""/>  
+  <state name="Hevap" type="" min="0" max="50" default="0" description=""/> 
+  <state name="Q_ref" type="" min="0" max="50" default="0" description=""/>   
+  <state name="Q_int" type="" min="0" max="50" default="0" description=""/>
+  <state name="fcpr_off_counter" type="" min="0" max="50" default="0" description=""/>
+  <state name="dummy1" type="" min="0" max="50" default="0" description=""/>  
+  <state name="dummy2" type="" min="0" max="50" default="0" description=""/>  
+  <state name="dummy3" type="" min="0" max="50" default="0" description=""/>  
+  <state name="Vhg" type="" min="0" max="50" default="0" description=""/>  
+  <state name="RH" type="" min="0" max="50" default="60" description=""/>  
+  <state name="Tset" type="" min="0" max="50" default="-5" description=""/>   
+  <state name="QHeat" type="" min="0" max="50" default="0" description="Additional heat added to the box"/>   
+  <state name="Controller" type="" min="0" max="5" default="1" description="Controller to be used"/>   
+  <state name="CtrlMode" type="" min="0" max="2" default="0" description="Control mode for the selected controller"/>   
+  
+</states>
+
+<filename>container_controller.m</filename>
+
+<simulation method="call" call="container_controller"/>
+
+</component>

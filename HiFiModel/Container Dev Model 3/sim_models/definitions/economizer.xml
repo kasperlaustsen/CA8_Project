@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="economizer_ltp">
+
+ <!-- Input section. Inputs must be listed in the correct order -->
+<inputs>
+  <input name="pin1" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+  <input name="hin1" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="mdotout1" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  <input name="pin2" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+  <input name="hin2" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="pout2" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+  <input name="Vexp" type="Signal" min="0" max="100" description="Percent [%]"/>
+</inputs>
+
+ <!-- State section. States must be listed in the correct order -->
+<states>
+  <state name="pout1" type="Pressure" min="0" max="50" default="9" description="Pressure [Bar]"/>
+  <state name="hout1" type="Enthalpy" min="0" max="50" default="260000" description="Specific Enthalpy [J/kg]"/>
+  <state name="mdotin1" type="Mass Flow" min="0" max="50" default="0.025" description="Mass flow [kg/s]"/>
+  <state name="hout2" type="Enthalpy" min="0" max="50" default="420000" description="Specific Enthalpy [J/kg]"/>
+  <state name="mdotin2" type="Mass Flow" min="0" max="50" default="0.015" description="Mass flow [kg/s]"/>
+  <state name="mdotout2" type="Mass Flow" min="0" max="50" default="0.015" description="Mass flow [kg/s]"/>
+  <state name="m1" type="Mass" min="0" max="50" default="0.4" description="Mass [kg]"/>
+  <state name="m2" type="Mass" min="0" max="50" default="0.01" description="Mass [kg]"/>
+  <state name="Tm" type="Temperature" min="-50" max="100" default="30" description="Metal Temperature"/>
+  <state name="Tsuc" type="Temperature" min="-50" max="100" default="30" description="Metal Temperature"/>
+  <!-- <state name="sigma" type="n/a" min="0" max="1" default="0.5" description="Liquid/vapor boundary"/> -->
+</states>
+
+<!-- Refpipe section. Defines the refrigeration pipes of the
+component  --> <refpipes>
+  <pipe type="in"  conid="ref_input_a">
+    <input name="pin1" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin1" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotin1" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_a">
+    <state name="pout1" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout1" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <input name="mdotout1" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+
+  <pipe type="in"  conid="ref_input_b">
+    <input name="pin2" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin2" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotin2" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_b">
+    <input name="pout2" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout2" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotout2" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+</refpipes>
+
+<control_inputs> </control_inputs>
+
+<!-- Name of the model .m file -->
+ <filename>econimizer.m</filename>
+
+<simulation method="ode15s" call="economizer"/>
+
+</component>
