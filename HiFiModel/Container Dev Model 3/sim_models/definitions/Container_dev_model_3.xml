@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simulation_model name="Container Dev Model 3" InitFunc="SetModelX0">
+<component_path>sim_models/definitions</component_path>
+
+
+
+<!-- This section defines MaSCHIL integration -->
+<MaSCHIL>
+  <!-- Pre simulation is run just before each simulation step -->
+  <!-- <PreSimFunc name="PreSimFunc"/> -->
+  <!-- Post simulation is run just after each simulation step -->
+  <PostSimFunc name="PostSimFunc"/>
+  <!-- Plot function can be used to plot detailed simulation results -->
+  <PlotFunc name="plotfunction"/>
+  <ControllerCompName name="ctrl"/>
+  <ModelInitFunc name="SetModelX0"/>
+  <MaSCHILVarInit name="InitMaSCHILVars"/>  
+</MaSCHIL>
+
+<components>
+  <component name="box" file="box.xml"/>
+  <component name="evap" file="evaporator.xml"/>
+  <component name="cpr" file="compressor.xml"/>
+  <component name="cond_recv" file="condenser_receiver.xml"/>
+  <component name="econ" file="economizer.xml"/>
+  <component name="ctrl" file="container_controller.xml"/>
+  <component name="FaultSim" file="FaultSimulator.xml"/>
+  <component name="SysMon" file="system_monitor.xml"/>
+</components>
+
+<!-- This is a comment -->
+<connections>
+  <!-- Refpipe connections -->
+  <refpipe name="Evap in">
+    <component name="econ" conid="ref_output_a"/>
+    <component name="evap" conid="ref_input_a"/>
+  </refpipe>
+
+  <refpipe name="Suction line">
+    <component name="evap" conid="ref_output_a"/>
+    <component name="cpr" conid="ref_input_a"/>
+  </refpipe>
+
+  <refpipe name="econdis">
+    <component name="cpr" conid="ref_input_b"/>
+    <component name="econ" conid="ref_output_b"/>
+  </refpipe>
+
+  <refpipe name="cpr2dis">
+    <component name="cpr" conid="ref_output_a"/>
+    <component name="cond_recv" conid="ref_input_a"/>
+  </refpipe>
+
+  <refpipe name="econ_exp_valve_in">
+    <component name="cond_recv" conid="ref_output_b"/>
+    <component name="econ" conid="ref_input_b"/>
+  </refpipe>
+
+  <refpipe name="econ_sc_in_in">
+    <component name="cond_recv" conid="ref_output_a"/>
+    <component name="econ" conid="ref_input_a"/>
+  </refpipe>
+
+  
+  <!-- Box input connections -->
+  <connection name="box_Tamb">
+     <component name="box" type="Input" input="Tamb"/>
+     <component name="ctrl" type="Output" output="Tamb"/>
+  </connection>
+
+  <connection name="box_Tsup">
+     <component name="box" type="Input" input="Tsup"/>
+     <component name="evap" type="Output" output="Tsup"/>
+  </connection>
+
+  <connection name="box_vfan">
+     <component name="box" type="Input" input="vfan"/>
+     <component name="ctrl" type="Output" output="vfan_evap"/>
+  </connection>
+  
+  <connection name="boxQHeat">
+     <component name="box" type="Input" input="QHeat"/>
+     <component name="ctrl" type="Output" output="QHeat"/>
+  </connection>
+
+<connection name="box_mdotair">
+     <component name="box" type="Input" input="mdotair"/>
+     <component name="evap" type="Output" output="mdotair"/>
+  </connection>
+  
+  <!-- Evaporator inputs -->
+  <connection name="Tret">
+     <component name="evap" type="Input" input="Tret"/>
+     <component name="box" type="Output" output="Tret"/>
+  </connection>
+  
+  <connection name="vfan_evap">
+     <component name="evap" type="Input" input="vfan"/>
+     <component name="ctrl" type="Output" output="vfan_evap"/>
+  </connection>
+
+  <connection name="evap_vexp">
+     <component name="evap" type="Input" input="Vexp"/>
+     <component name="ctrl" type="Output" output="evap_vexp"/>
+  </connection>
+
+  <connection name="Hevap">
+     <component name="evap" type="Input" input="Hevap"/>
+     <component name="ctrl" type="Output" output="Hevap"/>
+  </connection>
+  
+  <connection name="evap_Tamb">
+     <component name="evap" type="Input" input="Tamb"/>
+     <component name="ctrl" type="Output" output="Tamb"/>
+  </connection>
+
+
+  <!-- Controller inputs -->
+  <connection name="ctrl_Tret">
+     <component name="ctrl" type="Input" input="Tret"/>
+     <component name="box" type="Output" output="Tret"/>
+  </connection>
+
+  <connection name="ctrl_Tsup">
+     <component name="ctrl" type="Input" input="Tsup"/>
+     <component name="evap" type="Output" output="Tsup"/>
+  </connection>
+      
+  <connection name="evap_psuc">
+     <component name="ctrl" type="Input" input="evap_psuc"/>
+     <component name="evap" type="Output" output="pout"/>
+  </connection>
+  
+  <connection name="evap_hsuc">
+     <component name="ctrl" type="Input" input="evap_hsuc"/>
+     <component name="evap" type="Output" output="hout"/>
+  </connection>
+  
+  <connection name="EvapFault">
+     <component name="evap" type="Input" input="FaultMode"/>
+     <component name="FaultSim" type="Output" output="EvapFaultMode"/>
+  </connection>
+  
+  <connection name="econ_psuc">
+     <component name="ctrl" type="Input" input="econ_psuc"/>
+     <component name="cpr" type="Output" output="pim"/>
+  </connection>
+  
+  <connection name="econ_hsuc">
+     <component name="ctrl" type="Input" input="econ_hsuc"/>
+     <component name="econ" type="Output" output="hout2"/>
+  </connection>
+
+  <connection name="pdis">
+     <component name="ctrl" type="Input" input="pdis"/>
+     <component name="cond_recv" type="Output" output="pin"/>
+  </connection>
+  
+ <connection name="Tcargo">
+     <component name="ctrl" type="Input" input="Tcargo"/>
+     <component name="box" type="Output" output="Tcargo"/>
+  </connection>
+  
+  <connection name="Talu">
+     <component name="ctrl" type="Input" input="Talu"/>
+     <component name="box" type="Output" output="Talu"/>
+  </connection>
+
+ <connection name="hdis">
+     <component name="ctrl" type="Input" input="hdis"/>
+     <component name="cpr" type="Output" output="hout"/>
+  </connection>
+  
+  <connection name="ctrl_Tfc">
+     <component name="ctrl" type="Input" input="Tfc"/>
+     <component name="cpr" type="Output" output="Tfc"/>
+  </connection>
+  
+  <!-- Compressor inputs -->
+  <connection name="cpr_speed1">
+     <component name="cpr" type="Input" input="cpr_speed"/>
+     <component name="ctrl" type="Output" output="cpr_speed"/>
+  </connection>
+
+  <connection name="CprFault">
+     <component name="cpr" type="Input" input="FaultMode"/>
+     <component name="FaultSim" type="Output" output="CprFaultMode"/>
+  </connection>
+  
+    
+<!-- Condenser inputs -->
+  <connection name="Ta_cond">
+     <component name="cond_recv" type="Input" input="Tamb"/>
+     <component name="ctrl" type="Output" output="Tamb"/>
+  </connection>
+
+ <connection name="vfan_cond">
+     <component name="cond_recv" type="Input" input="vfan"/>
+     <component name="ctrl" type="Output" output="vfan_cond"/>
+  </connection>
+
+<!-- Economizer inputs -->  
+  <connection name="econ_vexp">
+     <component name="econ" type="Input" input="Vexp"/>
+     <component name="ctrl" type="Output" output="econ_vexp"/>
+  </connection>
+
+  
+  
+  
+<!-- Fault simulator inputs -->  
+  <connection name="FS_evap_psuc">
+     <component name="FaultSim" type="Input" input="evap_psuc"/>
+     <component name="evap" type="Output" output="pout"/>
+  </connection>
+  
+  <connection name="FS_evap_hsuc">
+     <component name="FaultSim" type="Input" input="evap_hsuc"/>
+     <component name="evap" type="Output" output="hout"/>
+  </connection>
+  
+  <connection name="FS_econ_psuc">
+     <component name="FaultSim" type="Input" input="econ_psuc"/>
+     <component name="cpr" type="Output" output="pim"/>
+  </connection>
+  
+  <connection name="FS_econ_hsuc">
+     <component name="FaultSim" type="Input" input="econ_hsuc"/>
+     <component name="econ" type="Output" output="hout2"/>
+  </connection>
+
+  <connection name="FS_pdis">
+     <component name="FaultSim" type="Input" input="pdis"/>
+     <component name="cond_recv" type="Output" output="pin"/>
+  </connection>
+
+  <connection name="FS_hdis">
+     <component name="FaultSim" type="Input" input="hdis"/>
+     <component name="cpr" type="Output" output="hout"/>
+  </connection>
+  
+ <connection name="FS_Tcargo">
+     <component name="FaultSim" type="Input" input="Tcargo"/>
+     <component name="box" type="Output" output="Tcargo"/>
+  </connection>
+  
+  <connection name="FS_Talu">
+     <component name="FaultSim" type="Input" input="Talu"/>
+     <component name="box" type="Output" output="Talu"/>
+  </connection>
+
+  <connection name="FS_Tret">
+     <component name="FaultSim" type="Input" input="Tret"/>
+     <component name="box" type="Output" output="Tret"/>
+  </connection>
+
+  <connection name="FS_Tsup">
+     <component name="FaultSim" type="Input" input="Tsup"/>
+     <component name="evap" type="Output" output="Tsup"/>
+  </connection>
+  
+  <!-- System monitor inputs -->
+  <connection name="SysMon_ctrl_Tret">
+     <component name="SysMon" type="Input" input="Tret"/>
+     <component name="box" type="Output" output="Tret"/>
+  </connection>
+
+  <connection name="SysMon_ctrl_Tsup1">
+     <component name="SysMon" type="Input" input="Tsup1"/>
+     <component name="evap" type="Output" output="Tsupm1"/>
+  </connection>
+    
+  <connection name="SysMon_ctrl_Tsup2">
+     <component name="SysMon" type="Input" input="Tsup2"/>
+     <component name="evap" type="Output" output="Tsupm2"/>
+  </connection>
+      
+  <connection name="SysMon_evap_psuc">
+     <component name="SysMon" type="Input" input="evap_psuc"/>
+     <component name="evap" type="Output" output="pout"/>
+  </connection>
+  
+  <connection name="SysMon_evap_Tsuc">
+     <component name="SysMon" type="Input" input="evap_Tsuc"/>
+     <component name="evap" type="Output" output="Tsuc"/>
+  </connection>
+  
+  <connection name="SysMon_econ_psuc">
+     <component name="SysMon" type="Input" input="econ_psuc"/>
+     <component name="cpr" type="Output" output="pim"/>
+  </connection>
+  
+  <connection name="SysMon_econ_Tsuc">
+     <component name="SysMon" type="Input" input="econ_Tsuc"/>
+     <component name="econ" type="Output" output="Tsuc"/>
+  </connection>
+
+  <connection name="SysMon_pdis">
+     <component name="SysMon" type="Input" input="pdis"/>
+     <component name="cond_recv" type="Output" output="pin"/>
+  </connection>
+  
+ <connection name="SysMon_Tcargo">
+     <component name="SysMon" type="Input" input="Tcargo"/>
+     <component name="box" type="Output" output="Tcargo"/>
+  </connection>
+  
+ <connection name="SysMon_hdis">
+     <component name="SysMon" type="Input" input="hdis"/>
+     <component name="cpr" type="Output" output="hout"/>
+  </connection>
+  
+  <connection name="SysMon_Tfc">
+     <component name="SysMon" type="Input" input="Tfc"/>
+     <component name="cpr" type="Output" output="Tfc"/>
+  </connection>  
+    
+  <connection name="SysMon_Tamb">
+     <component name="SysMon" type="Input" input="Tamb"/>
+     <component name="ctrl" type="Output" output="Tamb"/>
+  </connection>
+  
+  <connection name="SysMon_Tset">
+     <component name="SysMon" type="Input" input="Tset"/>
+     <component name="ctrl" type="Output" output="Tset"/>
+  </connection>
+  
+  <connection name="SysMon_RH">
+     <component name="SysMon" type="Input" input="RH"/>
+     <component name="box" type="Output" output="RH"/>
+  </connection>
+  
+  <connection name="SysMon_Mevap">
+     <component name="SysMon" type="Input" input="Mevap"/>
+     <component name="ctrl" type="Output" output="vfan_evap"/>
+  </connection>
+  
+</connections>
+
+</simulation_model>

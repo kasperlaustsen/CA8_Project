@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="FaultSim">
+
+<inputs>
+  <input name="evap_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="evap_hsuc" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="econ_psuc" type="Pressure" min="0" max="50" description="Suction Pressure"/>
+  <input name="econ_hsuc" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="pdis" type="Pressure" min="0" max="50" description="Dicharge Pressure"/>
+  <input name="hdis" type="Enthalpy" min="0" max="500000" description="Suction Enthalpy"/>
+  <input name="Tret" type="Temperature" min="-40" max="100" description="Air Return Temperature"/>
+  <input name="Tsup" type="Temperature" min="-40" max="100" description="Air Return Temperature"/>
+  <input name="Tcargo" type="Temperature" min="-40" max="100" description="Cargo Temperature"/>
+  <input name="Talu" type="Temperature" min="-40" max="100" description="Aluminum Temperature"/>
+</inputs>
+
+<states>
+  <state name="CprFaultMode" type="control_signal" min="0" max="3" default="0" description="Compressor fault mode"/>
+  <state name="EvapFaultMode" type="control_signal" min="0" max="3" default="0" description="Evaporator fault mode"/>
+</states>
+
+<filename>FaultSimulator.m</filename>
+
+<simulation method="call" call="FaultSimulator"/>
+
+</component>

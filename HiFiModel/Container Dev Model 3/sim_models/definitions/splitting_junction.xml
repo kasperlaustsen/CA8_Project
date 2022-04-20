@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?> <component name="splitting_junction">
+
+<inputs>
+  <input name="pin" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+  <input name="hin" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="mdotout1" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  <input name="mdotout2" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+</inputs>
+
+<states>
+  <state name="pout1" type="Pressure" min="0" max="50" default="5" description="Pressure [Bar]"/>
+  <state name="hout1" type="Enthalpy" min="0" max="50" default="225000" description="Specific Enthalpy [J/kg]"/>
+  <state name="pout2" type="Pressure" min="0" max="50" default="5" description="Pressure [Bar]"/>
+  <state name="hout2" type="Enthalpy" min="0" max="50" default="225000" description="Specific Enthalpy [J/kg]"/>
+  <state name="mdotin" type="Mass Flow" min="0" max="50" default="0.0" description="Mass flow [kg/s]"/>
+</states>
+
+<refpipes>
+  <pipe type="in" conid="ref_input_a">
+    <input name="pin" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotin" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_a">
+    <state name="pout1" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout1" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <input name="mdotout1" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_b">
+    <state name="pout2" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout2" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <input name="mdotout2" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+</refpipes>
+
+<simulation method="call" call="splitting_junction"/>
+
+<filename>splitting_junction.m</filename> 
+</component>

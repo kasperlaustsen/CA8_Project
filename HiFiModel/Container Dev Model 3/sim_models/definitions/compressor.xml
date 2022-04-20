@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?> <component
+name="cpr">
+
+<!-- Input section. Inputs must be listed in the correct order -->
+<inputs>
+  <input name="pin" type="Pressure" min="0" max="50" description="Input pressure [Bar]"/>
+  <input name="pout" type="Pressure" min="0" max="50" description="Output pressure [Bar]"/>
+  <input name="hin_suc" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="hin_im" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+  <input name="mdotin_im" type="Mass Flow" min="0" max="50" default="0.025" description="Mass flow [kg/s]"/>
+  <input name="cpr_speed" type="Number" min="0" max="110" description="Compressor Speed"/> 
+  <input name="FaultMode" type="Number" min="0" max="3" description="Fault mode of the compressor"/>
+</inputs>
+
+<!-- State section. States must be listed in the correct order -->
+<states>
+  <state name="hout" type="Enthalpy" min="0" max="50" default="440000" description="Specific Enthalpy [J/kg]"/>
+  <state name="s1hout" type="Enthalpy" min="0" max="50" default="420000" description="Specific Enthalpy [J/kg]"/>
+  <state name="pim"  type="Pressure" min="0" max="50"  default="3.5" description="Intermediate pressure [Bar]"/>
+  <state name="mdotin_suc" type="Mass Flow" min="0" max="50" default="0.025" description="Mass flow [kg/s]"/>
+  <state name="mdotout" type="Mass Flow" min="0" max="50" default="0.025" description="Mass flow [kg/s]"/>
+  <state name="h" type="Enthalpy" min="0" max="50" default="420000" description="Specific Enthalpy [J/kg]"/>
+  <state name="m" type="Mass" min="0" max="0.5" default="0.15" description="Internal Refrigerant Mass [kg]"/>
+  <state name="Tfc" type="Number" min="0" max="500"  default="60" description="Frequency Converter Temperature"/>
+</states>
+
+<!-- Refpipe section. Defines the refrigeration pipes of the
+component  --> <refpipes>
+  <pipe type="in"  conid="ref_input_a">
+    <input name="pin" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin_suc" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotin_suc" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="in" conid="ref_input_b">
+    <state name="pim" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <input name="hin_im" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <input name="mdotin_im" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+  <pipe type="out" conid="ref_output_a">
+    <input name="pout" type="Pressure" min="0" max="50" description="Pressure [Bar]"/>
+    <state name="hout" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>
+    <state name="mdotout" type="Mass Flow" min="0" max="50" description="Mass flow [kg/s]"/>
+  </pipe>
+</refpipes>
+
+<control_inputs>
+  <input name="cpr_speed" type="Number" min="0" max="110" description="Compressor Speed"/>
+  <input name="Tfc" type="Number" min="0" max="500" description="Frequency Converter Temperature"/>
+</control_inputs>
+
+<!-- Name of the model .m file -->
+
+ <filename>compressor.m</filename>
+
+<simulation method="ode15s" call="compressor"/>
+
+</component>

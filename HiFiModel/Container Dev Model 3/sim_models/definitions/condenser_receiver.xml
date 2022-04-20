@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="condenser_receiver">
+ <!-- Input section. Inputs must be listed in the correct order -->
+<inputs>
+  <input name="hin" type="Enthalpy" min="0" max="50" description="Specific Enthalpy [J/kg]"/>  
+  <input name="mdotin" type="Mass Flow" min="0" max="1"   description="Mass flow [kg/s]"/>
+  <input name="vfan" type="Fan Speed" min="-40" max="110" description="Fan Speed"/>
+  <input name="Tamb" type="Temperature" min="-40" max="110" description="Air Temperature [deg-C]"/>
+  <input name="mdotout1" type="Mass Flow" min="0" max="1" description="Mass flow [kg/s]"/>
+  <input name="mdotout2" type="Mass Flow" min="0" max="1" description="Mass flow [kg/s]"/>
+</inputs>
+ <!-- State section. States must be listed in the
+correct order -->
+
+<states>  
+  <state name="pout" type="Pressure" min="0" max="50" default="8" description="Pressure [Bar]"/>
+  <state name="hout" type="Enthalpy" min="0" max="50" default="230000" description="Specific Enthalpy [J/kg]"/>  
+  <state name="pin" type="Pressure" min="0" max="50" default="8" description="Pressure [Bar]"/>
+  <state name="hrefrig" type="Enthalpy" min="0" max="50" default="320000" description="Specific Enthalpy [J/kg]"/>
+  <state name="mrefrig" type="Mass" min="0" max="1" default="3.0" description="Refrigerant Mass [kg]"/>
+  <state name="Tm" type="Temperature" min="-50" max="100" default="10" description="Metal Temperature"/>
+  <state name="mdotair" type="mass flow" min="0" max="2" default="0" description="Air mass flow"/>  
+  <state name="Tc" type="Temperature" min="-30" max="90" default="0" description="Saturate discharge temperature"/>    
+</states>
+
+  <!-- Refpipe section. Defines the refrigeration pipes of
+the component  -->
+
+<refpipes>
+  <pipe type="in"  conid="ref_input_a">
+    <state name="pin" type="Pressure"/>
+    <input name="hin" type="Enthalpy"/>
+    <input name="mdotin" type="Mass Flow"/>
+  </pipe>
+  
+  <pipe type="out" conid="ref_output_a">
+    <state name="pout" type="Pressure"/>
+    <state name="hout" type="Enthalpy"/>
+    <input name="mdotout1" type="Mass Flow"/>
+  </pipe>
+  
+  <pipe type="out" conid="ref_output_b">
+    <state name="pout" type="Pressure"/>
+    <state name="hout" type="Enthalpy"/>
+    <input name="mdotout2" type="Mass Flow"/>
+  </pipe>
+</refpipes>
+
+ <control_inputs>
+  <input name="Tamb" type="Temperature" min="-40" max="110" description="Air Temperature [deg-C]"/>
+  <input name="vfan" type="Fan Speed" min="-40" max="110" description="Fan Speed"/>
+</control_inputs>
+
+<!-- Name of the model .m file -->
+ <filename>condenser_receiver.m</filename>
+
+<simulation method="ode15s" call="condenser_receiver"/>
+
+</component>
