@@ -1,5 +1,8 @@
 ## Don't upload the generated pdf
 
+
+
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
@@ -277,3 +280,8 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+# ignore plz
+*.tmw
+Modeling/eTRU_prototype_2_grt_rtw
+Modeling/slprj/grt/
