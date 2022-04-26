@@ -6,7 +6,7 @@
 syms h [1 7]
 syms p [1 5]
 syms T [1 7]
-syms m_dot_1 m_dot_2 m_dot_3 m_dot_4 m_dot_5  
+syms m_dot_1 m_dot_2 m_dot_4 m_dot_5  
 
 % variables in f
 syms M_PJJ M_Con T_m Q_rm Q_ma  Cp_m m_dot_air m_dot_bar_air T_mlv Q_amlv 
@@ -32,7 +32,7 @@ syms Theta_1 Theta_2 K_Val v_CTV_in v_EV_in fp
 syms m_dot_3_Val m_dot_5_Val
 
 % flash tank
-syms N M
+syms N M m_dot_5_FT
 
 % evaporator 
 syms sigma v_Eva V_i_Eva T_retfan T_ret Q_fan_2 m_dot_air Cp_air T_retsh 
