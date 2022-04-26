@@ -282,6 +282,11 @@ TSWLatexianTemp*
 *.lpz
 
 # ignore plz
+# ------------------------------
+
 *.tmw
 Modeling/eTRU_prototype_2_grt_rtw
+# Simulink cache files
 Modeling/slprj/grt/
+*.slxc
+*.autosave
