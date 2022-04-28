@@ -528,7 +528,7 @@ classdef CoolPropPyWrapper < handle
       Tmax = obj.TDewP(obj.PressureMax/101000); % Make sure this works above the critical pressure.
       p = ConvertAndLimitPressure(obj, p);
       
-      SatDiff = obj.PDewT(LimitValues(t, -273.15, Tmax))*100000 - p;
+      SatDiff = obj.PDewT(LimitValue(t, -273.15, Tmax))*100000 - p;
       idx = abs(SatDiff) < 1;
       p(idx) = p(idx) + 1; %sign(SatDiff(idx))
       
@@ -543,7 +543,7 @@ classdef CoolPropPyWrapper < handle
       % CP mass is undefined on the saturation curve and therefore this
       % is avoided
       Tmax = obj.TDewP(obj.PressureMax/101000); % Make sure this works above the critical pressure.
-      SatDiff = obj.PDewT(LimitValues(t, -273.15, Tmax))*100000 - p;
+      SatDiff = obj.PDewT(LimitValue(t, -273.15, Tmax))*100000 - p;
       idx = abs(SatDiff) < 1;
       p(idx) = p(idx) + 1; %sign(SatDiff(idx))
       for(k=1:length(p))
