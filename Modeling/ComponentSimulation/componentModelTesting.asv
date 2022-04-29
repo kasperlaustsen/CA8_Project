@@ -1,0 +1,41 @@
+clc;clear;close all;
+
+V_1_COM1   	= 50e-6;										% 50 cm^3 - found in krestens guestimate?
+V_1_COM2   	= V_1_COM1/2;									% 2nd stage is half the first
+V_C_COM1   	= V_1_COM1*0.05;								% 5pct of pre stroke volume
+V_C_COM2   	= V_1_COM2*0.05;								% 5pct of pre stroke volume
+% gamma		= 1.2;											% freon r134a side 31 T=20 p=500kPa
+kl_1       	= 1e5/2200;										% found in compressor script sent from kresten
+kl_2       	= 1e5/2200;										% found in compressor script sent from kresten 
+
+% gammaT1 = (out.logsout{28}.Values.Data(end,3) + out.logsout{26}.Values.Data(end,3)) /2;
+% gammaP1 = (out.logsout{28}.Values.Data(end,1) + out.logsout{26}.Values.Data(end,1)) /2;
+% gammaT2 = (out.logsout{28}.Values.Data(end,3) + out.logsout{25}.Values.Data(end,3)) /2;
+% gammaP2 = (out.logsout{28}.Values.Data(end,1) + out.logsout{25}.Values.Data(end,1)) /2;
+% 
+% gamma1     = ref.CpRatioTP(gammaT1, gammaP1); %T=(22-5)/2 degC    p=(1.9+4.5)/2 bar,   see also freom r134a side 25
+% gamma2     = ref.CpRatioTP(gammaT2, gammaP2); %T=(48+22)/2 degC    p=(4.5+7.7)/2 bar,   see also freom r134a side 34
+
+
+
+V1 = 50e-6; Vc = V1*0.05; kl1 = 1e5/2200; kl2 = 1e5/2200; Ccp = 5; Ccv = 10;
+pin = 1.9*1e5; pout = 1.85*1e5; Tin = 273.15+60; omega = 50;
+% 
+% comp1 = compressorModel(V1, Vc, kl1, kl2, Ccp, Ccv, pin, pout, Tin, omega);
+% comp1out = comp1.output()
+
+comp1V2 = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv);
+comp1V2out = comp1V2.simulate(pin, pout, Tin, omega)
+
+
+
+% TESTING PJJ
+% Inputs
+mdotin1 = 1; mdotin2 = 2; mdotout = 2; hin1 = 1000; hin2 = 2000;
+
+% Instanciating object:
+pjj = pjjModel(0, 1)
+
+% Simulating
+pjj.simulate(mdotin1, mdotin2, mdotout, hin1, hin2);
+
