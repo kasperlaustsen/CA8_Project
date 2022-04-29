@@ -1,15 +1,15 @@
-classdef pjjModel
+classdef pjjModel < handle
 	properties
 		% Constants
 		Minit		% Initial value of state
 		Ts			% Simulation sampling time
 
 		% Inputs
-		mdotin1		% [kg/s] Input flow 1
-		mdotin2		% [kg/s] Input flow 2
-		mdotout		% [kg/s] Output flow
-		hin1		% [] Input enthalpy
-		hin2		% [] Input enthalpy
+% 		mdotin1		% [kg/s] Input flow 1
+% 		mdotin2		% [kg/s] Input flow 2
+% 		mdotout		% [kg/s] Output flow
+% 		hin1		% [] Input enthalpy
+% 		hin2		% [] Input enthalpy
 
 		% States
 		M			% Mass inside pjj
@@ -34,12 +34,11 @@ classdef pjjModel
 
 
 		function out = simulate(obj, mdotin1, mdotin2, mdotout, hin1, hin2)
-			% Intermediate variables
+			% Update states
 			obj.Mdiriv = mdotin1 + mdotin2 - mdotout;
 			obj.M = obj.M + obj.Mdiriv * obj.Ts;
-
-			sprintf('Mdiriv = %.2f, M = %.2f', obj.Mdiriv, obj.Mdiriv)
-
+			
+			% Outputs
 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/(mdotin1 * mdotin2);
 
 			% Outputs
