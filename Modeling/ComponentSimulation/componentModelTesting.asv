@@ -9,6 +9,7 @@ N = size(out.tout,1)
 % Beware of the sample time in simulink..
 t = out.tout
 Ts_arr = [out.tout; out.tout(end)] - [0; out.tout]
+% TESTING compressorModelV2
 
 myfig(1)
 subplot(211)
@@ -24,10 +25,13 @@ ylabel('Simulink time sample')
 %% TESTING compressorModelV2
 
 % Inputs for instantiations
+% Inputs for instanciations
 V_1_COM1   	= 50e-6;										% 50 cm^3 - found in krestens guestimate?
 V_1_COM2   	= V_1_COM1/2;									% 2nd stage is half the first
 V_C_COM1   	= V_1_COM1*1e-2;								% 5pct of pre stroke volume
 V_C_COM2   	= V_1_COM2*1e-2;								% 5pct of pre stroke volume
+V_C_COM1   	= V_1_COM1*0.05;								% 5pct of pre stroke volume
+V_C_COM2   	= V_1_COM2*0.05;								% 5pct of pre stroke volume
 kl_1       	= 1e5/2200;										% found in compressor script sent from kresten
 kl_2       	= 1e5/2200;										% found in compressor script sent from kresten 
 
@@ -35,11 +39,14 @@ kl_2       	= 1e5/2200;										% found in compressor script sent from kresten
 % Instanciating object
 % V1 = 50e-6; Vc = V1*0.05; kl1 = 1e5/2200; kl2 = 1e5/2200; Ccp = 5; Ccv = 10;
 V1 = V_1_COM2; Vc = V_C_COM2; kl1 = kl_1; kl2 = kl_2; Ccp = 1.19; Ccv = 1;
+comp1V2 = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv);
 
 comp1V2 = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv, ref);
 
 % Simulating
 % pin = 1.9*1e5; pout = 1.85*1e5; Tin = 273.15+60; omega = 50; % these variables are used for initial testing
+V1 = 50e-6; Vc = V1*0.05; kl1 = 1e5/2200; kl2 = 1e5/2200; Ccp = 5; Ccv = 10;
+pin = 1.9*1e5; pout = 1.85*1e5; Tin = 273.15+60; omega = 50;
 
 % these are variables to test whether function and HifiModel agrees
 pin		= getData('meas_com2in'	,'p',	out);
@@ -48,12 +55,14 @@ pout	= getData('cpr_disc_line'	,'p',	out);
 omega	= getData('Fcpr'			,''	,	out);
 omega_t = getTime('Fcpr', out);
 omega_new = transformControllerInput(omega,omega_t,t);
+comp1V2out = comp1V2.simulate(pin, pout, Tin, omega)
 
 % output
 mdot	= getData('cpr_disc_line'	,'m',	out);
 
 comp1V2out_arr = zeros(N,3);
 
+% TESTING pjjModel
 
 
 for i=1:N
@@ -88,6 +97,7 @@ max(comp1V2out_arr(:,1))
 %% TESTING pjjModel
 
 % Inputs for instantiations
+% Inputs for instanciations
 Ts = 1; % Simulation time in s
 Mpjjinit = 1; % inital mass inside pjj
 
@@ -175,3 +185,8 @@ pjj.M
 % 	data = out.logsout{i}.Values.Data(:,j)
 % end
 
+
+% TESTING evaporatorModel
+Ts = 1; Mlvinit = 0.2; Mvinit = 1/1000; Tmlvinit
+evap = evaporatorModel(Ts, Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
+			Vi, Cpair, rhoair, UA1, UA2, UA3, Tvinit)

@@ -39,6 +39,7 @@ V_C_COM2   	= V_1_COM2*1e-2;								% 5pct of pre stroke volume
 kl_1       	= 1e5/2200;										% found in compressor script sent from kresten
 kl_2       	= 1e5/2200;										% found in compressor script sent from kresten 
 
+
 % Instantiating object
 % V1 = 50e-6; Vc = V1*0.05; kl1 = 1e5/2200; kl2 = 1e5/2200; Ccp = 5; Ccv = 10;
 V1 = V_1_COM2; Vc = V_C_COM2; kl1 = kl_1; kl2 = kl_2; Ccp = 1.19; Ccv = 1;
@@ -55,7 +56,6 @@ pout	= getData('cpr_disc_line'	,'p',	out);
 omega	= getData('Fcpr'			,''	,	out);
 omega_t = getTime('Fcpr', out);
 omega_new = transformControllerInput(omega,omega_t,t);
-
 % output
 mdot	= getData('cpr_disc_line'	,'m',	out);
 
@@ -163,3 +163,17 @@ title('Mass in PJJ with start of simulation. Initialised with M = 0')
 
 %% TESTING condenserModel
 
+
+% TESTING evaporatorModel
+Ts = 1; Mlvinit = 0.2; Mvinit = 1/1000; Tmlvinit = -10+273.15; Tmvinit = -10+273.15;
+mdotairinit = 0.2; Vi = 50/10000; Cpair = 1000; rhoair = 1000; UA1 = 50; UA2 = 50;
+UA3 = 50; Mm = 30; Tvinit = -15 + 273.15;
+
+
+Vi = 50e-6; 
+evap = evaporatorModel(Ts, Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
+			Vi, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit)
+
+hin = 3000; pin = 1.9*1e5; mdotin = 0.15; mdotout = 0.14; Tret = 30+273.15;
+Ufan = 0.5;
+evap.simulate(hin, pin, mdotin, mdotout, Tret, Ufan)	
