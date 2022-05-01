@@ -156,8 +156,7 @@ classdef evaporatorModel < handle
 			obj.Mvdiriv		= obj.mdotdew - mdotout;
 			obj.mdotairdiriv = (obj.mbardotair - obj.mdotair)/10;
 			
-			sprintf('Qamlv = %.2f, Qmlv = %.2f, Qmvmlv = %.2f, Mm = %.2f, ,sigma = %.2f, Cpair = %.2f, ', ...
-				obj.Qamlv, obj.Qmlv, obj.Qmvmlv, obj.Mm, obj.sigma, obj.Cpair)
+			obj.Qamlv, obj.Qmlv, obj.Qmvmlv, obj.Mm, obj.sigma, obj.Cpair)
 			obj.Tmlvdiriv	= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpair);
 			obj.Tmvdiriv	= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpair);
 
