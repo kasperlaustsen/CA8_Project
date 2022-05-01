@@ -9,6 +9,8 @@ classdef compressorModelV2 < handle
 		Ccp		% Spec heat cap - constant pressure
 		Ccv		% Spec heat cap - constant pressure
 		ref
+		OMEGA_MAX
+		INPUT_SCALE_MAX
 		% Inputs
 % 		pin		% [Pa] Input pressure
 % 		pout	% [Pa] Output pressure
@@ -35,7 +37,8 @@ classdef compressorModelV2 < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv, ref)
+		function obj = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv, ...
+				OMEGA_MAX, INPUT_SCALE_MAX, ref)
 				obj.V1 = V1;
 				obj.Vc = Vc;
 				obj.kl1 = kl1;
@@ -44,6 +47,8 @@ classdef compressorModelV2 < handle
 				obj.Ccv = Ccv;
 				obj.ref = ref;
 				obj.gamma = Ccp/Ccv;
+				obj.OMEGA_MAX = OMEGA_MAX;
+				obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
 		end
 		% ---------------------------------
 
@@ -59,8 +64,8 @@ classdef compressorModelV2 < handle
 
 		function out = simulate(obj, pin, pout, Tin, omega)
 			% Intermediate variables
-			obj.p1 = pin - obj.kl1*omega;
-			obj.p2 = pout - obj.kl2*omega;
+			obj.p1 = pin - obj.kl1*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
+			obj.p2 = pout + obj.kl2*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
 			obj.v1 = obj.gammalut(Tin, obj.p1);
 			obj.v2 = (obj.p2/obj.p1)^(-1/obj.gamma);
 

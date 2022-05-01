@@ -285,6 +285,7 @@ TSWLatexianTemp*
 # ------------------------------
 
 *.tmw
+*.asv
 Modeling/eTRU_prototype_2_grt_rtw
 # Simulink cache files
 slprj/
