@@ -8,7 +8,7 @@ classdef compressorModelV2 < handle
 
 		Ccp		% Spec heat cap - constant pressure
 		Ccv		% Spec heat cap - constant pressure
-
+		ref
 		% Inputs
 % 		pin		% [Pa] Input pressure
 % 		pout	% [Pa] Output pressure
@@ -35,14 +35,14 @@ classdef compressorModelV2 < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv)
+		function obj = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv, ref)
 				obj.V1 = V1;
 				obj.Vc = Vc;
 				obj.kl1 = kl1;
 				obj.kl2 = kl2;
 				obj.Ccp = Ccp;
 				obj.Ccv = Ccv;
-				
+				obj.ref = ref;
 				obj.gamma = Ccp/Ccv;
 		end
 		% ---------------------------------
@@ -76,13 +76,15 @@ classdef compressorModelV2 < handle
 		function h = upsilonlut(obj, T, p)
 			% This is the lookup table function
 			% Currently a placeholder where T is multiplied with p
-			h = T*p;
+% 			h = T*p;
+			h = obj.ref.HTP(T,p);
 		end
 
 		function v = gammalut(obj, T, p)
 			% This is the lookup table function
 			% Currently a placeholder where T is multiplied with p
-			v = T*p;
+% 			v = T*p;
+			v = obj.ref.VTP(T,p);
 		end
 	end
 end
