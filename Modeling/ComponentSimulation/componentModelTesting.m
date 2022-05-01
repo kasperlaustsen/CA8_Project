@@ -28,11 +28,7 @@ Ts_arr = [out.tout(2:N); out.tout(end)] - [0; out.tout(1:end-1)];
 
 %% TESTING compressorModelV2
 
-% Inputs for instantiations
-
-% V_1_COM2_orig = 50e-6/2;
-% V_C_COM2_orig = V_1_COM2_orig*1e-2;
-
+% Inputs for instantiation
 V_1_COM1   	= 50e-6;										% 50 cm^3 - found in krestens guestimate?
 V_1_COM2   	= V_1_COM1/2;									% 2nd stage is half the first
 V_C_COM1   	= V_1_COM1*1e-2;								% 5pct of pre stroke volume
@@ -92,16 +88,10 @@ title('Ratio between flows')
 %% TESTING pjjModel
 
 % Inputs for instantiations
-Ts = 1; % Simulation time in s
 Mpjjinit = 0; % inital mass inside pjj
 
 % Instanciating object:
 pjj = pjjModel(Mpjjinit);
-
-% Initial testing
-% mdotin1 = 1; mdotin2 = 2; mdotout = 2; hin1 = 1000; hin2 = 2000;
-% pjj.simulate(mdotin1, mdotin2, mdotout, hin1, hin2);
-% pjj.M
 
 
 % these inputs are taken to test whether our model and HifiModel agrees
@@ -177,12 +167,11 @@ V_i_Con		= 1.8*1e-3;	% Condenser volume
 
 
 % Operating point
-% T_r			= 30 + 273.15;									% found in ???
 v_Con		= 0.0008;										% pure guess. needs to be table look up later
 
 
 % Instanciating object:
-cond = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, v_Con, lambda, M_m_Con, Cp_m)
+cond = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m)
 
 
 % these inputs are taken to test whether our model and HifiModel agrees
@@ -270,6 +259,8 @@ ylabel('Pressure []')
 % stairs(t,U_fan_new)
 % legend('controller sampled U_{fan}', 'variable sampled U_{fan}')
 
+%% TESTING condenser throttle valve model
+
 
 %% TESTING evaporatorModel
 Ts = 1; Mlvinit = 0.2; Mvinit = 1/1000; Tmlvinit = -10+273.15; Tmvinit = -10+273.15;
@@ -284,3 +275,6 @@ evap = evaporatorModel(Ts, Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
 hin = 3000; pin = 1.9*1e5; mdotin = 0.15; mdotout = 0.14; Tret = 30+273.15;
 Ufan = 0.5;
 evap.simulate(hin, pin, mdotin, mdotout, Tret, Ufan)	
+
+
+

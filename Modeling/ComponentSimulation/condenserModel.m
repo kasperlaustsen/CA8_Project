@@ -41,7 +41,7 @@ classdef condenserModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, v_Con, lambda, M_m_Con, Cp_m)
+		function obj = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m)
 			obj.Mrinit = Mrinit;
 			obj.Tminit = Tminit;
 			obj.Mr = Mrinit;
@@ -50,7 +50,7 @@ classdef condenserModel < handle
 			obj.UA_rm	= UA_rm;
 			obj.UA_ma	= UA_ma;
 			obj.V_i_Con = V_i_Con;
-			obj.v_Con	= v_Con;		%	 could be exchanged with a table lookup?
+% 			obj.v_Con	= v_Con;		%	 could be exchanged with a table lookup?
 			obj.lambda	= lambda;
 			obj.M_m_Con = M_m_Con;
 			obj.Cp_m	= Cp_m;
@@ -61,11 +61,11 @@ classdef condenserModel < handle
 
 
 		function out = simulate(obj, mdotin, hin, pout,	T_r, T_ambi, U_fan,FAN_MAX,INPUT_SCALE_MAX,	Ts,	ref)
-% 			v_Con = ref.VHP(hin,pin)
+			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
+			v_Con		=	ref.VHP(hin,obj.pin);
 			Q_rm		=	obj.UA_rm * (T_r - obj.Tm);	
 			obj.hout	= 	hin - Q_rm/mdotin;
-			obj.mdotout	= 	mdotin + obj.Mr - obj.V_i_Con/obj.v_Con;	% Con	- new used
-			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
+			obj.mdotout	= 	mdotin + obj.Mr - obj.V_i_Con/v_Con;	% Con	- new used
 			Q_ma		= 	obj.UA_ma*(obj.Tm - T_ambi)*(0.05 + U_fan*(FAN_MAX/INPUT_SCALE_MAX)*2)  	;	% Con	
 			
 
