@@ -42,7 +42,7 @@ INPUT_SCALE_MAX = 100;
 % Instantiating object
 V1 = V_1_COM2; Vc = V_C_COM2; kl1 = kl_1; kl2 = kl_2; Ccp = 1.19; Ccv = 1;
 
-comp1V2 = compressorModelV2(V1, Vc, kl1, kl2, Ccp, Ccv, OMEGA_MAX, INPUT_SCALE_MAX, ref);
+comp1V2 = compressorModel(V1, Vc, kl1, kl2, Ccp, Ccv, OMEGA_MAX, INPUT_SCALE_MAX, ref);
 
 % these inputs are taken to test whether our model and HifiModel agrees
 pin		= getData('meas_com2in'		,'p',	out)*1e5;
@@ -220,7 +220,7 @@ plot(t, cond_arr(:,3))
 % ylim([-4e5 4e5])
 legend('Pressure measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
-ylabel('Pressure []')
+ylabel('Pressure [Pa]')
 
 % %%% checking that the inputs make sense,  
 % myfig(4, [width height])
@@ -263,7 +263,7 @@ THETA_MAX = 1;			% max value of valves
 C_Val   	= 0.64;											% discharge coefficient
 A_Val   	= ((20/2)^2)*pi*10^-6;							% Cross sectional area
 % K_Val   	= C_Val*A_Val;									% collected constant
-K_Val		= 1e-5;											% approximate value from krestens phd
+K_Val		= 1e-5;											% approximate value 1e-5from krestens phd
 
 % Instanciating object:
 val = valveModel(THETA_MAX,INPUT_SCALE_MAX,K_Val)
@@ -272,16 +272,65 @@ val = valveModel(THETA_MAX,INPUT_SCALE_MAX,K_Val)
 pin			= getData('cond_out_line', 'p', out)*1e5;	
 hin			= getData('cond_out_line', 'h', out);
 mdotin		= getData('cond_out_line', 'm', out); 
-Theta		= getData('VFT', '', out);
-Theta_t		= getTime('',		out);
+Theta		= getData('Vcond', '',	out);
+Theta_t		= getTime('Vcond',		out);
 Theta_new	= transformControllerInput(Theta, Theta_t, t); 																
 
+% output
+pout		= getData('ft_in_line', 'p', out)*1e5;	
+
+% pin(3000)
+% hin(3000)
+% mdotin(3000)
+% Theta_new(3000)
 
 
+var_arr = zeros(N,1);
+for i=1:N
+	val_arr(i) = val.simulate(pin(i), hin(i), mdotin(i), Theta_new(i), ref);
+end
 
-out = simulate(obj, pin, hin, mdotin, Theta, ref)
+
+myfig(5, [width height])
+ax1 = subplot(311)
+plot(t,mdotin)
+legend('mdotin')
+
+ax2 = subplot(312)
+plot(t,pin)
+hold on
+plot(t,pout)
+plot(t,val_arr)
+legend('pin','pout', 'valveModel pout')
+
+ax3 = subplot(313)
+stairs(t,Theta_new)
+legend('Theta')
+
+linkaxes([ax1 ax2 ax3],'x')
 
 
+%%% checking that the inputs make sense,  
+% myfig(5, [width height])
+% subplot(411)
+% plot(t,mdotin)
+% legend('mdotin')
+% 
+% subplot(412)
+% plot(t,hin)
+% legend('hin')
+% 
+% subplot(413)
+% plot(t,pin)
+% hold on
+% plot(t,pout)
+% legend('pin','pout')
+% 
+% subplot(414)
+% stairs(Theta_t,Theta+1)
+% hold on
+% stairs(t,Theta_new)
+% legend('controller sampled Theta', 'variable sampled Theta')
 
 
 
