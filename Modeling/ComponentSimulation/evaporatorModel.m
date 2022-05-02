@@ -4,48 +4,55 @@ classdef evaporatorModel < handle
 		% --------------
 		Ts			% Simulation sampling time
 
-		Mlvinit		% [] Initial value of state
-		Mvinit		% [] 
-		Tmlvinit	% [] 
-		Tmvinit		% [] 
-		mdotairinit	% [] 
+		Mlvinit		% [kg] Initial value of state
+		Mvinit		% [kg] 
+		Tmlvinit	% [K] 
+		Tmvinit		% [K] 
+		mdotairinit	% [kg/s] 
 
-		Tvinit		% To set the "old" value of Tv (Tvold) for algebraic loop
+		Tvinit		% [K] To set the "old" value of Tv (Tvold) for algebraic loop
 		
 		Vi			% [m3] Internal volume
-		Cpair		% [] 
-		rhoair		% [] 
-		UA1			% [] Heat transfer coeff. m -> lv
-		UA2			% [] Heat transfer coeff. m -> v
-		UA3			% [] Heat transfer coeff. mv -> mlv
-		Mm			% [] Evaporator metal mass
+		Cpair		% [J/K] Heat capacity of air
+		rhoair		% [kg/m3] 
+		UA1			% [W/(m2K)] Heat transfer coeff. m -> lv
+		UA2			% [W/(m2K)] Heat transfer coeff. m -> v
+		UA3			% [W/(m2K)] Heat transfer coeff. mv -> mlv
+		Mm			% [kg] Evaporator metal mass
+		Xe			% [] Average quality content
+
+		INPUT_SCALE_MAX
+		FAN_MAX
+
+		% Coolprop wrapper object
+		ref			% Wrapper
 
 		% "Internal" variables
 		% --------------
-		sigma		% [] Boundary
-		v1			% [] LUT. refrig. spec. volume
-		Tretfan		% [] 
-		Tretsh		% [] 
+		sigma		% [% (0-1)] Boundary
+		v1			% [m3/kg] LUT. refrig. spec. volume
+		Tretfan		% [K] 
+		Tretsh		% [K] 
 
 		Ustarp		% [] 
 		Ustarmdot	% [] 
-		Vbardotair	% [] 
-		mbardotair	% [] 
+		Vbardotair	% [m3/s] 
+		mbardotair	% [kg/s] 
 
-		Qfan		% Fan -> Air
-		Qamv		% Ambient air -> (vapor) metal
-		Qamlv		% Ambient air -> (liquid-vapor) metal
-		Qmvmlv		% (vapor) metal -> (liquid-vapor) metal
-		Qmv			% Metal -> Vapor
-		Qmlv		% Metal -> liquid-vapor
-		Tlv			% LUT. liquid-vapor refrig temp
-		Tv			% LUT. liquid-vapor refrig temp
+		Qfan		% [] Fan -> Air
+		Qamv		% [] Ambient air -> (vapor) metal
+		Qamlv		% [] Ambient air -> (liquid-vapor) metal
+		Qmvmlv		% [] (vapor) metal -> (liquid-vapor) metal
+		Qmv			% [] Metal -> Vapor
+		Qmlv		% [] Metal -> liquid-vapor
+		Tlv			% [K] LUT. liquid-vapor refrig temp
+		Tv			% [K] LUT. liquid-vapor refrig temp
 		Vlv			% [m3] liquid-vapor volume
-		hlv
-		hdew		% LUT. From pressure before evaporator
-		mdotdew		% 
+		hlv			% [J] 
+		hdew		% [J] LUT. From pressure before evaporator
+		mdotdew		% [kg/s] 
 
-		Tvold
+		Tvold		% [K] 
 
 		% Inputs
 		% --------------
@@ -58,22 +65,22 @@ classdef evaporatorModel < handle
 
 		% States
 		% --------------
-		Mlv			% 
-		Mv			% 
-		Tmlv		% 
-		Tmv			% 
-		mdotair		% 
-		Mlvdiriv	% 
-		Mvdiriv		% 
-		Tmlvdiriv	% 
-		Tmvdiriv	% 
-		mdotairdiriv% 
+		Mlv			% [kg] 
+		Mv			% [kg] 
+		Tmlv		% [K] 
+		Tmv			% [K] 
+		mdotair		% [kg/s] 
+		Mlvdiriv	% [kg] 
+		Mvdiriv		% [kg] 
+		Tmlvdiriv	% [K] 
+		Tmvdiriv	% [K] 
+		mdotairdiriv% [kg/s] 
 
 		% Outputs
 		% --------------
-		pout		% LUT
-		hv			% 
-		Tsup		% 
+		pout		% [Pa] LUT
+		hv			% [J] 
+		Tsup		% [K] 
 	end
 	
 
@@ -82,7 +89,8 @@ classdef evaporatorModel < handle
 		% Constructor method
 		% ---------------------------------
 		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
-			Vi, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit)
+			Vi, Xe, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit, INPUT_SCALE_MAX, ...
+			FAN_MAX, ref)
 			obj.Mlvinit		= Mlvinit		;
 			obj.Mvinit		= Mvinit		;
 			obj.Tmlvinit	= Tmlvinit		;
@@ -101,23 +109,28 @@ classdef evaporatorModel < handle
 			obj.UA2			= UA2			;
 			obj.UA3			= UA3			;
 			obj.Mm			= Mm			;
+			obj.Xe			= Xe			;
+			obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
+			obj.FAN_MAX		= FAN_MAX		;
 
 			obj.Tvold		= Tvinit		; % A Tv variable is needed to get things started
+
+			obj.ref			= ref			; % CoolProp Wrapper object
 		end
 		% ---------------------------------
 
 
 		function out = simulate(obj, hin, pin, mdotin, mdotout, Tret, Ufan, Ts)	
 			% Internal variables
-			obj.Tlv		= obj.Philut(pin, hin);				% Not good that its table lookup?
+			obj.Tlv		= obj.Philut(hin, pin);				% Not good that its table lookup?
 
-			obj.v1		= obj.gammalut(obj.Tlv, pin);
+			obj.v1		= obj.Lambdalut(pin, obj.Xe);
 			obj.sigma	= obj.Mlv * obj.v1 / obj.Vi;
 
 			% Fan shit
-			obj.Ustarp	= (Ufan*100-55.56)*0.0335;
+			obj.Ustarp	= (scalein(Ufan)*100-55.56)*0.0335;
 			obj.Qfan	= 177.76 + 223.95*obj.Ustarp + 105.85*obj.Ustarp^2 + 16.74*obj.Ustarp^3;
-			obj.Ustarmdot	= (Ufan*3060 - 2270.4)*0.0017;
+			obj.Ustarmdot	= (scalein(Ufan)*3060 - 2270.4)*0.0017;
 			obj.Vbardotair = 0.7273 + 0.1202*obj.Ustarmdot - 0.0044*obj.Ustarmdot; 
 			obj.mbardotair = obj.Vbardotair*obj.rhoair;
 			
@@ -137,8 +150,8 @@ classdef evaporatorModel < handle
 			obj.Qmv		= obj.UA2*(obj.Tmv - obj.Tvold)*(1 - obj.sigma);
 			obj.hv		= obj.hdewlut(pin) + obj.Qmv/mdotin;
 			obj.Vlv		= obj.sigma * obj.Vi;
-			obj.pout	= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv))
-			obj.Tv		= obj.Philut(obj.pout, obj.hv);
+			obj.pout	= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
+			obj.Tv		= obj.Philut(obj.hv, obj.pout);
 			% Save old value
 			obj.Tvold	= obj.Tv;
 
@@ -146,8 +159,6 @@ classdef evaporatorModel < handle
 			obj.Mlvdiriv	= mdotin - obj.mdotdew;
 			obj.Mvdiriv		= obj.mdotdew - mdotout;
 			obj.mdotairdiriv = (obj.mbardotair - obj.mdotair)/10;
-			
-			obj.Qamlv, obj.Qmlv, obj.Qmvmlv, obj.Mm, obj.sigma, obj.Cpair)
 			obj.Tmlvdiriv	= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpair);
 			obj.Tmvdiriv	= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpair);
 
@@ -163,22 +174,27 @@ classdef evaporatorModel < handle
 			out = [obj.pout, obj.hv, obj.Tsup]
 		end
 
-		function v = gammalut(obj, T, p)
-			v = T*p;
+		function v = Lambdalut(obj, p, X)
+			v = obj.REF.VPX(p*1e-5, X); % Pressure in bar
 		end
 
-		function T = Philut(obj, p, h)
-			T = p*h;
+		function T = Philut(obj, h, p)
+			T = obj.ref.THP(h, p*1e-5); % Pressure in bar
 		end
 
 		function hdew = hdewlut(obj, p)
 			% Dew point enthalpy. Probably just from input pressure
-			hdew = p;
+			hdew = obj.ref.HDewP(p*1e-5); % Pressure in bar
 		end
 
 		function p = PIlut(obj, h, D)
 			% Pressure from enthalyp and density
-			p = h*D;
+			p = obj.ref.PHD(h, D);
+		end
+
+		function out = scalein(obj, in)
+			% Scale input to between 0 and INPUT_SCALE_MAX
+			out = obj.FAN_MAX/obj.INPUT_SCALE_MAX * in;
 		end
 	end
 end

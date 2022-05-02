@@ -68,13 +68,13 @@ classdef compressorModel < handle
 
 		function out = simulate(obj, pin, pout, Tin, omega)
 			% Intermediate variables
-			obj.p1 = pin - obj.kl1*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
-			obj.p2 = pout + obj.kl2*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
+			obj.p1 = pin - obj.kl1*scalein(omega);
+			obj.p2 = pout + obj.kl2*scalein(omega);
 			obj.v1 = obj.gammalut(Tin, obj.p1);
 			obj.v2 = (obj.p2/obj.p1)^(-1/obj.gamma);
 
 			% Outputs
-			obj.mdot = (obj.V1/obj.v1 - obj.Vc/obj.v2)*omega/2;
+			obj.mdot = (obj.V1/obj.v1 - obj.Vc/obj.v2)*scalein(omega)/2;
 			obj.Tout = Tin * (pout/pin)^((obj.gamma-1)/obj.gamma);
 			obj.hout = obj.upsilonlut(obj.Tout, pout);
 
@@ -83,17 +83,17 @@ classdef compressorModel < handle
 
 		% Table lookups
 		function h = upsilonlut(obj, T, p)
-			% This is the lookup table function
-			% Currently a placeholder where T is multiplied with p
-% 			h = T*p;
-			h = obj.ref.HTP(T,p);
+			h = obj.ref.HTP(T, p*1e-5);
 		end
 
 		function v = gammalut(obj, T, p)
-			% This is the lookup table function
-			% Currently a placeholder where T is multiplied with p
-% 			v = T*p;
-			v = obj.ref.VTP(T,p);
+			v = obj.ref.VTP(T, p*1e-5);
 		end
+		
+		function out = scalein(obj, in)
+			% Scale input to between 0 and INPUT_SCALE_MAX
+			out = obj.OMEGA_MAX/obj.INPUT_SCALE_MAX * in;
+		end
+		
 	end
 end

@@ -71,25 +71,28 @@ classdef condenserModel < handle
 		% ---------------------------------
 
 
-		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, ref)
+		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, Ts, ref)
 			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
 			obj.v			=	ref.VHP(hin,obj.pin);
 			obj.Qrm			=	obj.UArm * (Tr - obj.Tm);	
 			obj.hout	= 	hin - obj.Qrm/mdotin;
 			obj.mdotout	= 	mdotin + obj.Mr - obj.Vi/obj.v;	% Con	- new used
-			obj.Qma			= 	obj.UAma*(obj.Tm - Tambi)*(0.05 + Ufan* ...
-							(obj.FAN_MAX/obj.INPUT_SCALE_MAX)*2);	% Con	
-			
+			obj.Qma			= 	obj.UAma*(obj.Tm - Tambi)*(0.05 + scalein(Ufan)*2);	% Con	
 
 			% Update states
 			obj.Mrdiriv	= 	mdotin - obj.mdotout;
 			obj.Tmdiriv	= 	(obj.Qrm - obj.Qma)/(obj.Mm * obj.Cpm);
 			
-			obj.Mr			= obj.Mr + obj.Mrdiriv * obj.Ts;
-			obj.Tm			= obj.Tm + obj.Tmdiriv * obj.Ts;
+			obj.Mr			= obj.Mr + obj.Mrdiriv * Ts;
+			obj.Tm			= obj.Tm + obj.Tmdiriv * Ts;
 
 			% Outputs
 			out = [obj.hout obj.mdotout obj.pin obj.Mr obj.Tm];
+		end
+
+		function out = scalein(obj, in)
+			% Scale input to between 0 and INPUT_SCALE_MAX
+			out = obj.FAN_MAX/obj.INPUT_SCALE_MAX * in;
 		end
 	end
 end
