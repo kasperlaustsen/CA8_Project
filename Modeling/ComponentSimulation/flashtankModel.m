@@ -1,22 +1,27 @@
-classdef name < handle
+classdef flashtankModel < handle
 	properties
 		% Constants
+		% --------------
 					% Initial value of state
-		Ts			% Simulation sampling time
+
+		% "Internal" variables
+		% --------------
+		ref			% CoolProp wrapper
 
 		% Inputs
+		% --------------
 % 		pin
 % 		hin
 % 		mdotin
 
-		% States
-
+% 		Ts			% Simulation sampling time
 
 		% Outputs
-		hout1
-		hout2
-		mdotout1
-		mdotout2
+		% --------------
+		hout1		% [J/kg] 
+		hout2		% [J/kg] 
+		mdotout1	% [kg/s] 
+		mdotout2	% [kg/s] 
 	end
 
 % %%% EQUATIONS
@@ -26,24 +31,30 @@ classdef name < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = name(ref)
+		function obj = flashtankModel(ref)
 			obj.ref = ref;
-
 		end
 		% ---------------------------------
 
 
 		function out = simulate(obj, pin, hin, mdotin)
-			% Update states
-			
-			
 			% Outputs
-			obj.hout1		= ref.HDewP(pin); 									% liquid enthalpy
-			obj.hout2		= ref.HBubP(pin); 									% vapour enthalpy
+			obj.hout1		= obj.Mlut(pin); 									% liquid enthalpy
+			obj.hout2		= obj.Nlut(pin); 									% vapour enthalpy
 			obj.mdotout1	= mdotin*(hin - obj.hout2)/(obj.hout2 + obj.hout1); % liquid mass flow
 			obj.mdotout2	= mdotin - obj.mdotout1;							% vapour mass flow
 
 			out = [obj.hout1 obj.hout2 obj.mdotout1 obj.mdotout2];
+		end
+
+		function h = Mlut(p)
+			% dew point enthalpy from pressure (in bar)
+			h = obj.ref.HDewP(p*1e-5);
+		end
+
+		function h = Nlut(p)
+			% bubble point enthalpy from pressure (in bar)
+			h = obj.ref.HBupP(p*1e-5);
 		end
 	end
 end

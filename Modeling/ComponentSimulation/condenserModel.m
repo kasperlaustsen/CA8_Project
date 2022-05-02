@@ -33,7 +33,7 @@ classdef condenserModel < handle
 
 		% Outputs
 		% --------------
-		hout				% [] 
+		hout				% [J/kg] 
 		mdotout				% [] 
 		pin					% [] 
 	end

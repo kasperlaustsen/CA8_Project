@@ -1,17 +1,20 @@
 classdef name < handle
 	properties
 		% Constants
-					% Initial value of state
-		Ts			% Simulation sampling time
+		% --------------
+
+		% "Internal" variables
+		% --------------
+
 
 		% Inputs
-
+		% --------------
 
 		% States
-
+		% --------------
 
 		% Outputs
-
+		% --------------
 	end
 	
 
@@ -20,7 +23,6 @@ classdef name < handle
 		% Constructor method
 		% ---------------------------------
 		function obj = name(Ts)
-			obj.Ts = Ts;
 
 		end
 		% ---------------------------------

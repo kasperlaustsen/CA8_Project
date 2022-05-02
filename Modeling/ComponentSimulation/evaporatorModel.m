@@ -48,8 +48,8 @@ classdef evaporatorModel < handle
 		Tlv			% [K] LUT. liquid-vapor refrig temp
 		Tv			% [K] LUT. liquid-vapor refrig temp
 		Vlv			% [m3] liquid-vapor volume
-		hlv			% [J] 
-		hdew		% [J] LUT. From pressure before evaporator
+		hlv			% [J/kg] Specific enthalpy of liquid-vapor CV
+		hdew		% [J/kg] LUT. From pressure before evaporator
 		mdotdew		% [kg/s] 
 
 		Tvold		% [K] 
@@ -79,7 +79,7 @@ classdef evaporatorModel < handle
 		% Outputs
 		% --------------
 		pout		% [Pa] LUT
-		hv			% [J] 
+		hv			% [J/kg] Output vapor specific enthalpy
 		Tsup		% [K] 
 	end
 	
