@@ -1,8 +1,8 @@
 classdef pjjModel < handle
 	properties
 		% Constants
+		% --------------
 		Minit		% Initial value of state
-% 		Ts			% Simulation sampling time
 
 		% Inputs
 % 		mdotin1		% [kg/s] Input flow 1
@@ -11,16 +11,18 @@ classdef pjjModel < handle
 % 		hin1		% [] Input enthalpy
 % 		hin2		% [] Input enthalpy
 
+%		Ts			% Sample time
+
 		% States
-		M			% Mass inside pjj
-		Mdiriv		% Mass time derivative
+		% --------------
+		M			% [kg] Mass inside pjj
+		Mdiriv		% [kg] Mass time derivative
 
 		% Outputs
-		hout		% Enthalpy out
+		% --------------
+		hout		% [] Enthalpy out
 	end
 	
-
-
 	methods
 % 		% Constructor method
 % 		% ---------------------------------

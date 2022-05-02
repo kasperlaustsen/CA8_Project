@@ -1,32 +1,41 @@
 classdef condenserModel < handle
 	properties
 		% Constants
-		Mrinit
-		Tminit
-		UA_rm
-		UA_ma
-		V_i_Con
-		v_Con
-		lambda
-		M_m_Con
-		Cp_m
-		
+		% --------------
+		Mrinit				% [] 
+		Tminit				% [] 
+		UArm				% [] 
+		UAma				% [] 
+		Vi					% [] 
+
+		% "Internal" variables
+		% --------------
+		v					% [] 
+		lambda				% [] 
+		Mm					% [] 
+		Cpm					% [] 
+		FAN_MAX				% [] 
+		INPUT_SCALE_MAX		% [] 
+	
 		% Inputs
+		% --------------
 % 		hin
 % 		mdotin
 % 		pout
 % 		T_ambi
 		
-		% StatesT_m
-		Mr
-		Mr_diriv
-		Tm
-		Tm_diriv
+		% States
+		% --------------
+		Mr					% [] 
+		Mrdiriv				% [] 
+		Tm					% [] 
+		Tmdiriv				% [] 
 
 		% Outputs
-		hout
-		mdotout
-		pin
+		% --------------
+		hout				% [] 
+		mdotout				% [] 
+		pin					% [] 
 	end
 	
 % % % EQUATIONS FROM CONSTRAINTS_FULL_SIMULATION AND COLLECTING_COMPONENTS
@@ -41,40 +50,43 @@ classdef condenserModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m)
+		function obj = condenserModel(Mrinit, Tminit, UArm, UAma, Vi, lambda, ...
+				Mm, Cpm, FAN_MAX, INPUT_SCALE_MAX)
 			obj.Mrinit = Mrinit;
 			obj.Tminit = Tminit;
 			obj.Mr = Mrinit;
 			obj.Tm = Tminit;
 			
-			obj.UA_rm	= UA_rm;
-			obj.UA_ma	= UA_ma;
-			obj.V_i_Con = V_i_Con;
-% 			obj.v_Con	= v_Con;		%	 could be exchanged with a table lookup?
+			obj.UArm	= UArm;
+			obj.UAma	= UAma;
+			obj.Vi = Vi;
 			obj.lambda	= lambda;
-			obj.M_m_Con = M_m_Con;
-			obj.Cp_m	= Cp_m;
+			obj.Mm = Mm;
+			obj.Cpm	= Cpm;
+			obj.FAN_MAX = FAN_MAX;
+			obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
 		
 
 		end
 		% ---------------------------------
 
 
-		function out = simulate(obj, mdotin, hin, pout,	T_r, T_ambi, U_fan,FAN_MAX,INPUT_SCALE_MAX,	Ts,	ref)
+		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, ref)
 			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
-			v_Con		=	ref.VHP(hin,obj.pin);
-			Q_rm		=	obj.UA_rm * (T_r - obj.Tm);	
-			obj.hout	= 	hin - Q_rm/mdotin;
-			obj.mdotout	= 	mdotin + obj.Mr - obj.V_i_Con/v_Con;	% Con	- new used
-			Q_ma		= 	obj.UA_ma*(obj.Tm - T_ambi)*(0.05 + U_fan*(FAN_MAX/INPUT_SCALE_MAX)*2)  	;	% Con	
+			obj.v			=	ref.VHP(hin,obj.pin);
+			obj.Qrm			=	obj.UArm * (Tr - obj.Tm);	
+			obj.hout	= 	hin - obj.Qrm/mdotin;
+			obj.mdotout	= 	mdotin + obj.Mr - obj.Vi/obj.v;	% Con	- new used
+			obj.Qma			= 	obj.UAma*(obj.Tm - Tambi)*(0.05 + Ufan* ...
+							(obj.FAN_MAX/obj.INPUT_SCALE_MAX)*2);	% Con	
 			
 
 			% Update states
-			obj.Mr_diriv	= 	mdotin - obj.mdotout;
-			obj.Tm_diriv	= 	(Q_rm - Q_ma)/(obj.M_m_Con * obj.Cp_m);
+			obj.Mrdiriv	= 	mdotin - obj.mdotout;
+			obj.Tmdiriv	= 	(obj.Qrm - obj.Qma)/(obj.Mm * obj.Cpm);
 			
-			obj.Mr			= obj.Mr + obj.Mr_diriv * Ts;
-			obj.Tm			= obj.Tm + obj.Tm_diriv * Ts;
+			obj.Mr			= obj.Mr + obj.Mrdiriv * obj.Ts;
+			obj.Tm			= obj.Tm + obj.Tmdiriv * obj.Ts;
 
 			% Outputs
 			out = [obj.hout obj.mdotout obj.pin obj.Mr obj.Tm];

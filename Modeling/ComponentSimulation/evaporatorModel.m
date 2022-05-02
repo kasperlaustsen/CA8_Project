@@ -4,22 +4,48 @@ classdef evaporatorModel < handle
 		% --------------
 		Ts			% Simulation sampling time
 
-		Mlvinit		% Initial value of state
-		Mvinit		% 
-		Tmlvinit	% 
-		Tmvinit		% 
-		mdotairinit	% 
+		Mlvinit		% [] Initial value of state
+		Mvinit		% [] 
+		Tmlvinit	% [] 
+		Tmvinit		% [] 
+		mdotairinit	% [] 
 
 		Tvinit		% To set the "old" value of Tv (Tvold) for algebraic loop
 		
 		Vi			% [m3] Internal volume
-		Cpair		% 
-		rhoair		% 
-		UA1			% Heat transfer coeff. m -> lv
-		UA2			% Heat transfer coeff. m -> v
-		UA3			% Heat transfer coeff. mv -> mlv
-		Mm			% Evaporator metal mass
+		Cpair		% [] 
+		rhoair		% [] 
+		UA1			% [] Heat transfer coeff. m -> lv
+		UA2			% [] Heat transfer coeff. m -> v
+		UA3			% [] Heat transfer coeff. mv -> mlv
+		Mm			% [] Evaporator metal mass
 
+		% "Internal" variables
+		% --------------
+		sigma		% [] Boundary
+		v1			% [] LUT. refrig. spec. volume
+		Tretfan		% [] 
+		Tretsh		% [] 
+
+		Ustarp		% [] 
+		Ustarmdot	% [] 
+		Vbardotair	% [] 
+		mbardotair	% [] 
+
+		Qfan		% Fan -> Air
+		Qamv		% Ambient air -> (vapor) metal
+		Qamlv		% Ambient air -> (liquid-vapor) metal
+		Qmvmlv		% (vapor) metal -> (liquid-vapor) metal
+		Qmv			% Metal -> Vapor
+		Qmlv		% Metal -> liquid-vapor
+		Tlv			% LUT. liquid-vapor refrig temp
+		Tv			% LUT. liquid-vapor refrig temp
+		Vlv			% [m3] liquid-vapor volume
+		hlv
+		hdew		% LUT. From pressure before evaporator
+		mdotdew		% 
+
+		Tvold
 
 		% Inputs
 		% --------------
@@ -29,7 +55,6 @@ classdef evaporatorModel < handle
 		% mdotout
 		% Tret		% Return air temperature
 		% Ufan
-
 
 		% States
 		% --------------
@@ -44,43 +69,11 @@ classdef evaporatorModel < handle
 		Tmvdiriv	% 
 		mdotairdiriv% 
 
-
-		% "Internal" variables
-		% --------------
-		sigma		% Boundary
-		v1			% LUT. refrig. spec. volume
-		Tretfan		%
-		Tretsh		%
-
-		Ustarp		%
-		Ustarmdot	%
-		Vbardotair	%
-		mbardotair	%
-		
-		Qfan		% Fan -> Air
-		Qamv		% Ambient air -> (vapor) metal
-		Qamlv		% Ambient air -> (liquid-vapor) metal
-		Qmvmlv		% (vapor) metal -> (liquid-vapor) metal
-		Qmv			% Metal -> Vapor
-		Qmlv		% Metal -> liquid-vapor
-		Tlv			% LUT. liquid-vapor refrig temp
-		Tv			% LUT. liquid-vapor refrig temp
-		Vlv			% [m3] liquid-vapor volume
-		hlv
-		hdew		% LUT. From pressure before evaporator
-		mdotdew		% 
-
-		%poutold		% old pressure out variable (used to fix algebraic loop)
-		Tvold
-
-
 		% Outputs
 		% --------------
 		pout		% LUT
 		hv			% 
 		Tsup		% 
-				
-
 	end
 	
 
@@ -88,10 +81,8 @@ classdef evaporatorModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = evaporatorModel(Ts, Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
+		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
 			Vi, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit)
-			obj.Ts			= Ts;
-
 			obj.Mlvinit		= Mlvinit		;
 			obj.Mvinit		= Mvinit		;
 			obj.Tmlvinit	= Tmlvinit		;
@@ -116,7 +107,7 @@ classdef evaporatorModel < handle
 		% ---------------------------------
 
 
-		function out = simulate(obj, hin, pin, mdotin, mdotout, Tret, Ufan)	
+		function out = simulate(obj, hin, pin, mdotin, mdotout, Tret, Ufan, Ts)	
 			% Internal variables
 			obj.Tlv		= obj.Philut(pin, hin);				% Not good that its table lookup?
 
@@ -128,7 +119,7 @@ classdef evaporatorModel < handle
 			obj.Qfan	= 177.76 + 223.95*obj.Ustarp + 105.85*obj.Ustarp^2 + 16.74*obj.Ustarp^3;
 			obj.Ustarmdot	= (Ufan*3060 - 2270.4)*0.0017;
 			obj.Vbardotair = 0.7273 + 0.1202*obj.Ustarmdot - 0.0044*obj.Ustarmdot; 
-			obj.mbardotair = obj.Vbardotair*obj.rhoair; 	
+			obj.mbardotair = obj.Vbardotair*obj.rhoair;
 			
 			obj.Tretfan = Tret + obj.Qfan/(obj.mdotair*obj.Cpair);
 			obj.Qamv	= obj.Cpair*obj.mdotair*(obj.Tretfan - obj.Tmv);
@@ -160,11 +151,11 @@ classdef evaporatorModel < handle
 			obj.Tmlvdiriv	= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpair);
 			obj.Tmvdiriv	= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpair);
 
-			obj.Mlv			= obj.Mlv * obj.Mlvdiriv	* obj.Ts;
-			obj.Mv			= obj.Mv * obj.Mvdiriv		* obj.Ts;
-			obj.mdotair		= obj.mdotair * obj.mdotairdiriv * obj.Ts;
-			obj.Tmlv		= obj.Tmlv * obj.Tmlvdiriv	* obj.Ts;
-			obj.Tmv			= obj.Tmv * obj.Tmvdiriv	* obj.Ts;
+			obj.Mlv			= obj.Mlv * obj.Mlvdiriv	* Ts;
+			obj.Mv			= obj.Mv * obj.Mvdiriv		* Ts;
+			obj.mdotair		= obj.mdotair * obj.mdotairdiriv * Ts;
+			obj.Tmlv		= obj.Tmlv * obj.Tmlvdiriv	* Ts;
+			obj.Tmv			= obj.Tmv * obj.Tmvdiriv	* Ts;
 
 			% Outputs
 			obj.Tsup = obj.Tretfan + (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair)

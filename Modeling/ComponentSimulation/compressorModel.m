@@ -1,6 +1,7 @@
-classdef compressorModel
+classdef compressorModel < handle
 	properties
 		% Constants
+		% --------------
 		V1		% Cylinder internal volume
 		Vc		% Cylinder clearance volume
 		kl1		% Valve loss constant
@@ -8,26 +9,31 @@ classdef compressorModel
 
 		Ccp		% Spec heat cap - constant pressure
 		Ccv		% Spec heat cap - constant pressure
-
-		% Inputs
-		pin		% [Pa] Input pressure
-		pout	% [Pa] Output pressure
-		Tin		% [K] Input temperature
+		ref
+		OMEGA_MAX
+		INPUT_SCALE_MAX
 		
 		% "Internal" variables
+		% --------------
 		v1		% Refri spec vol bf stroke
 		v2		% Refri spec vol after stroke
 		gamma	% Heat capacity ratio
 		p1		% [Pa] Pressure bf stroke
 		p2		% [Pa] Pressure bf stroke
 
-		omega	% Compressor speed
+		% Inputs
+		% --------------
+% 		pin		% [Pa] Input pressure
+% 		pout	% [Pa] Output pressure
+% 		Tin		% [K] Input temperature
+
+% 		omega	% Compressor speed
 
 		% Outputs
+		% --------------
 		mdot	% [m3/s] Flow through compressor
 		hout	% Enthalpy out
 		Tout	% [K] Output temperature
-
 	end
 	
 
@@ -35,28 +41,18 @@ classdef compressorModel
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = compressorModel(V1, Vc, kl1, kl2, Ccp, Ccv, pin, pout, Tin, omega)
+		function obj = compressorModel(V1, Vc, kl1, kl2, Ccp, Ccv, ...
+				OMEGA_MAX, INPUT_SCALE_MAX, ref)
 				obj.V1 = V1;
 				obj.Vc = Vc;
 				obj.kl1 = kl1;
 				obj.kl2 = kl2;
 				obj.Ccp = Ccp;
 				obj.Ccv = Ccv;
-
-				% Inputs
-				obj.pin = pin;
-				obj.pout = pout;
-				obj.Tin = Tin;
-				
+				obj.ref = ref;
 				obj.gamma = Ccp/Ccv;
-				obj.p1 = pin - kl1*omega;
-				obj.p2 = pout - kl2*omega
-				obj.v1 = obj.gammalut();
-				obj.v2 = (obj.p2/obj.p1)^(-1/obj.gamma);
-
-				obj.mdot = (obj.V1/obj.v1 - obj.Vc/obj.v2)*omega/2;
-				obj.Tout = obj.Tin * (obj.pout/obj.pin)^((obj.gamma-1)/obj.gamma);
-				obj.hout = obj.upsilonlut();
+				obj.OMEGA_MAX = OMEGA_MAX;
+				obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
 		end
 		% ---------------------------------
 
@@ -70,22 +66,34 @@ classdef compressorModel
 % 			out = [obj.mdot, obj.hout, obj.Tout];
 % 		end
 
-		function out = output(obj)
-			out = [obj.mdot obj.hout obj.Tout];
+		function out = simulate(obj, pin, pout, Tin, omega)
+			% Intermediate variables
+			obj.p1 = pin - obj.kl1*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
+			obj.p2 = pout + obj.kl2*omega*(obj.OMEGA_MAX/obj.INPUT_SCALE_MAX);
+			obj.v1 = obj.gammalut(Tin, obj.p1);
+			obj.v2 = (obj.p2/obj.p1)^(-1/obj.gamma);
+
+			% Outputs
+			obj.mdot = (obj.V1/obj.v1 - obj.Vc/obj.v2)*omega/2;
+			obj.Tout = Tin * (pout/pin)^((obj.gamma-1)/obj.gamma);
+			obj.hout = obj.upsilonlut(obj.Tout, pout);
+
+			out = [obj.mdot, obj.Tout, obj.hout];
 		end
 
 		% Table lookups
-		function h = upsilonlut(obj)
+		function h = upsilonlut(obj, T, p)
 			% This is the lookup table function
 			% Currently a placeholder where T is multiplied with p
-			h = obj.Tout * obj.pout;
+% 			h = T*p;
+			h = obj.ref.HTP(T,p);
 		end
 
-		function v = gammalut(obj)
+		function v = gammalut(obj, T, p)
 			% This is the lookup table function
 			% Currently a placeholder where T is multiplied with p
-			v = obj.Tin*obj.p1;
+% 			v = T*p;
+			v = obj.ref.VTP(T,p);
 		end
-
 	end
 end
