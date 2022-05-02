@@ -46,7 +46,6 @@ classdef evaporatorModel < handle
 		Qmv			% [] Metal -> Vapor
 		Qmlv		% [] Metal -> liquid-vapor
 		Tlv			% [K] LUT. liquid-vapor refrig temp
-		Tv			% [K] LUT. liquid-vapor refrig temp
 		Vlv			% [m3] liquid-vapor volume
 		hlv			% [J/kg] Specific enthalpy of liquid-vapor CV
 		hdew		% [J/kg] LUT. From pressure before evaporator
@@ -80,6 +79,7 @@ classdef evaporatorModel < handle
 		% --------------
 		pout		% [Pa] LUT
 		hv			% [J/kg] Output vapor specific enthalpy
+		Tv			% [K] LUT. liquid-vapor refrig temp
 		Tsup		% [K] 
 	end
 	
@@ -122,7 +122,7 @@ classdef evaporatorModel < handle
 
 		function out = simulate(obj, hin, pin, mdotin, mdotout, Tret, Ufan, Ts)	
 			% Internal variables
-			obj.Tlv		= obj.Philut(hin, pin);				% Not good that its table lookup?
+			obj.Tlv		= obj.Philut(hin, pin);
 
 			obj.v1		= obj.Lambdalut(pin, obj.Xe);
 			obj.sigma	= obj.Mlv * obj.v1 / obj.Vi;
