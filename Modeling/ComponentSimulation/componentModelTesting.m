@@ -14,17 +14,18 @@ N = size(out.tout,1);
 t = out.tout;
 Ts_arr = [out.tout(2:N); out.tout(end)] - [0; out.tout(1:end-1)];
 
-% %%% visualisation of sample variable sample time
-% myfig(i)
-% subplot(211)
-% plot(t)
-% xlabel('Sample number')
-% ylabel('Time [s]')
-% title('Simulink time array')
-% subplot(212)
-% plot(Ts_arr)
-% xlabel('Sample number')
-% ylabel('Simulink time sample')
+%%% visualisation of sample variable sample time
+myfig(i)
+subplot(211)
+plot(t)
+xlabel('Sample number')
+ylabel('Time [s]')
+title('Simulink time array')
+subplot(212)
+
+plot(Ts_arr)
+xlabel('Sample number')
+ylabel('Simulink time sample')
 
 %% TESTING compressorModelV2
 
@@ -166,10 +167,6 @@ M_m_Con		= 22.976;	% found in ??? (coefficient sheet?
 V_i_Con		= 1.8*1e-3;	% Condenser volume
 
 
-% Operating point
-v_Con		= 0.0008;										% pure guess. needs to be table look up later
-
-
 % Instanciating object:
 cond = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m)
 
@@ -260,6 +257,35 @@ ylabel('Pressure []')
 % legend('controller sampled U_{fan}', 'variable sampled U_{fan}')
 
 %% TESTING condenser throttle valve model
+INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
+THETA_MAX = 1;			% max value of valves
+
+C_Val   	= 0.64;											% discharge coefficient
+A_Val   	= ((20/2)^2)*pi*10^-6;							% Cross sectional area
+% K_Val   	= C_Val*A_Val;									% collected constant
+K_Val		= 1e-5;											% approximate value from krestens phd
+
+% Instanciating object:
+val = valveModel(THETA_MAX,INPUT_SCALE_MAX,K_Val)
+
+% these inputs are taken to test whether our model and HifiModel agrees
+pin			= getData('cond_out_line', 'p', out)*1e5;	
+hin			= getData('cond_out_line', 'h', out);
+mdotin		= getData('cond_out_line', 'm', out); 
+Theta		= getData('VFT', '', out);
+Theta_t		= getTime('',		out);
+Theta_new	= transformControllerInput(Theta, Theta_t, t); 																
+
+
+
+
+out = simulate(obj, pin, hin, mdotin, Theta, ref)
+
+
+
+
+
+%% TESTING flash tank model
 
 
 %% TESTING evaporatorModel

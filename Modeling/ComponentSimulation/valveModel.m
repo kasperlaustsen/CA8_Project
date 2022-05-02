@@ -1,9 +1,9 @@
-classdef name < handle
+classdef valveModel < handle
 	properties
 		% Constants
 		THETA_MAX
 		INPUT_SCALE_MAX
-		K_Val
+		K
 
 		% Inputs
 % 		pin
@@ -25,10 +25,10 @@ classdef name < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = name(THETA_MAX,INPUT_SCALE_MAX,K_Val)
+		function obj = valveModel(THETA_MAX,INPUT_SCALE_MAX,K)
 			obj.THETA_MAX		= 	THETA_MAX;
 			obj.INPUT_SCALE_MAX = 	INPUT_SCALE_MAX;
-			obj.K_Val			= 	K_Val;
+			obj.K			= 	K;
 
 		end
 		% ---------------------------------
@@ -39,7 +39,7 @@ classdef name < handle
 
 			
 			% Outputs
-			obj.pout	=	pin - mdotin^2/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K_Val)^2 * ref.VHP(hin, pin);
+			obj.pout	=	pin - mdotin^2/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * ref.VHP(hin, pin);
 
 			out = 0;
 		end
