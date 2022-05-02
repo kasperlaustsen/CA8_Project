@@ -28,7 +28,7 @@ classdef valveModel < handle
 		function obj = valveModel(THETA_MAX,INPUT_SCALE_MAX,K)
 			obj.THETA_MAX		= 	THETA_MAX;
 			obj.INPUT_SCALE_MAX = 	INPUT_SCALE_MAX;
-			obj.K			= 	K;
+			obj.K				= 	K;
 
 		end
 		% ---------------------------------
@@ -39,9 +39,12 @@ classdef valveModel < handle
 
 			
 			% Outputs
-			obj.pout	=	pin - mdotin^2/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * ref.VHP(hin, pin);
+			vin = ref.VHP(hin, pin*1e-5);
+% 			obj.pout	=	pin - mdotin^2/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * ref.VHP(hin, pin);
+			obj.pout	=	pin - (mdotin*abs(mdotin))/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * vin;
 
-			out = 0;
+			out = obj.pout;
 		end
+		
 	end
 end
