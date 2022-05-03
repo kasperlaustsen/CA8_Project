@@ -16,7 +16,9 @@ classdef condenserModel < handle
 		Cpm					% [] 
 		FAN_MAX				% [] 
 		INPUT_SCALE_MAX		% [] 
-	
+		Qrm					% []
+		Qma					% []
+		ref 
 		% Inputs
 		% --------------
 % 		hin
@@ -51,7 +53,7 @@ classdef condenserModel < handle
 		% Constructor method
 		% ---------------------------------
 		function obj = condenserModel(Mrinit, Tminit, UArm, UAma, Vi, lambda, ...
-				Mm, Cpm, FAN_MAX, INPUT_SCALE_MAX)
+				Mm, Cpm, ref, FAN_MAX, INPUT_SCALE_MAX)
 			obj.Mrinit = Mrinit;
 			obj.Tminit = Tminit;
 			obj.Mr = Mrinit;
@@ -65,19 +67,21 @@ classdef condenserModel < handle
 			obj.Cpm	= Cpm;
 			obj.FAN_MAX = FAN_MAX;
 			obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
-		
+			obj.Qma = 0;
+			obj.Qrm = 0;
+			obj.ref = ref;
 
 		end
 		% ---------------------------------
 
 
-		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, Ts, ref)
+		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, Ts)
 			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
-			obj.v			=	ref.VHP(hin,obj.pin);
-			obj.Qrm			=	obj.UArm * (Tr - obj.Tm);	
+			obj.v		=	obj.ref.VHP(hin,obj.pin);
+			obj.Qrm		=	obj.UArm * (Tr - obj.Tm);	
 			obj.hout	= 	hin - obj.Qrm/mdotin;
 			obj.mdotout	= 	mdotin + obj.Mr - obj.Vi/obj.v;	% Con	- new used
-			obj.Qma			= 	obj.UAma*(obj.Tm - Tambi)*(0.05 + scalein(Ufan)*2);	% Con	
+			obj.Qma		= 	obj.UAma*(obj.Tm - Tambi)*(0.05 + obj.scalein(Ufan)*2);	% Con	
 
 			% Update states
 			obj.Mrdiriv	= 	mdotin - obj.mdotout;

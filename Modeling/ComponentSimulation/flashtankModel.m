@@ -18,10 +18,10 @@ classdef flashtankModel < handle
 
 		% Outputs
 		% --------------
-		hout1		% [J/kg] 
-		hout2		% [J/kg] 
-		mdotout1	% [kg/s] 
-		mdotout2	% [kg/s] 
+		hout_liq		% [J/kg] 
+		hout_vap		% [J/kg] 
+		mdotout_liq	% [kg/s] 
+		mdotout_vap	% [kg/s] 
 	end
 
 % %%% EQUATIONS
@@ -39,22 +39,26 @@ classdef flashtankModel < handle
 
 		function out = simulate(obj, pin, hin, mdotin)
 			% Outputs
-			obj.hout1		= obj.Mlut(pin); 									% liquid enthalpy
-			obj.hout2		= obj.Nlut(pin); 									% vapour enthalpy
-			obj.mdotout1	= mdotin*(hin - obj.hout2)/(obj.hout2 + obj.hout1); % liquid mass flow
-			obj.mdotout2	= mdotin - obj.mdotout1;							% vapour mass flow
+			obj.hout_liq		= obj.Mlut(pin); 									% liquid enthalpy
+			obj.hout_vap		= obj.Nlut(pin); 									% vapour enthalpy
+			obj.mdotout_vap		= mdotin*(hin - obj.hout_liq)/(obj.hout_vap - obj.hout_liq); % liquid mass flow
+			obj.mdotout_liq		= mdotin - obj.mdotout_vap;							% vapour mass flow
 
-			out = [obj.hout1 obj.hout2 obj.mdotout1 obj.mdotout2];
+			out = [obj.hout_liq, obj.hout_vap, obj.mdotout_liq, obj.mdotout_vap];
 		end
 
-		function h = Mlut(p)
-			% dew point enthalpy from pressure (in bar)
-			h = obj.ref.HDewP(p*1e-5);
-		end
-
-		function h = Nlut(p)
+		function h = Mlut(obj, p)
 			% bubble point enthalpy from pressure (in bar)
-			h = obj.ref.HBupP(p*1e-5);
+% 			h = obj.ref.HDewP(p*1e-5);
+			h = obj.ref.HBubP(p*1e-5);
+
+		end
+
+		function h = Nlut(obj, p)
+			% dew point enthalpy from pressure (in bar)
+% 			h = obj.ref.HBubP(p*1e-5);
+			h = obj.ref.HDewP(p*1e-5);
+
 		end
 	end
 end
