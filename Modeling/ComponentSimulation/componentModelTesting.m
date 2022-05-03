@@ -410,21 +410,129 @@ legend('mdotout2: vapor mass flow','Krestens model')
 % 
 
 %% Testing boxModel
-% hej martin
+
 
 %% TESTING evaporatorModel
-Ts = 1; Mlvinit = 0.2; Mvinit = 1/1000; Tmlvinit = -10+273.15; Tmvinit = -10+273.15;
-mdotairinit = 0.2; Vi = 50/10000; Cpair = 1000; rhoair = 1000; UA1 = 50; UA2 = 50;
-UA3 = 50; Mm = 30; Tvinit = -15 + 273.15;
+N_OP = 8000;
+
+% these inputs are taken to test whether our model and HifiModel agrees
+hin			= getData('evap_exv_out_line', 'h', 	out);
+pin			= getData('evap_exv_out_line', 'p', 	out)*1e5;	
+mdotin		= getData('evap_exv_out_line', 'm', 	out); 
+mdotout		= getData('evap_out_line', 'm', 	out); 
+Tv			= getData('evap_out_line', 'T', 	out) + 273.15;	
+% Tv2			= getData('tsuc', '', 	out);	% adds a bit of heat from pipe in simulation. 
+Tret		= getData('tret', '', 	out);	
+Ufan		= getData('evap_fan_pct', '', 	out); 	
+Ufan_t		= getTime('evap_fan_pct',		out); 	
+Ufan_new	= transformControllerInput(Ufan, Ufan_t, t);				
+    	
+
+% output
+pout		= getData('evap_out_line', 'p',					out)*1e5;	
+hout		= getData('evap_out_line', 'h', out);
+Tsup		= getData('tsup', '',  out);
 
 
-Vi = 50e-6; 
-evap = evaporatorModel(Ts, Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
-			Vi, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit)
+% Constants
+INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
+FAN_MAX = 1;			% max value of fan	
 
-hin = 3000; pin = 1.9*1e5; mdotin = 0.15; mdotout = 0.14; Tret = 30+273.15;
-Ufan = 0.5;
-evap.simulate(hin, pin, mdotin, mdotout, Tret, Ufan)	
+% All these constants needs to be double checked. 
+Mlvinit		= 0.5; 
+Mvinit		= 1e-1; 
+Tmlvinit	= Tv(N_OP) + 1.5; 
+Tmvinit		= Tv(N_OP) + 2; 
+mdotairinit = 0.1; 
 
 
+V_i_Eva		= 11.9*0.001;									% is 11.9 L  - L->m3 ; from simulink->14*1.8*6*(0.005^2)*pi; %nr_pipes*length*area
+Cp_air    	= 1003.5;										% heat capacity of air, google
+rho_air		= 1.225;										% density of air
+UA_1      	= 3510;											% found in krestens phd
+UA_2      	= 1930;											% found in krestens phd
+UA_3      	= 50;											% found in krestens phd
+M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
+Xe			= 0.1;																																								
+		
+% Instantiating object:
+evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
+			V_i_Eva, Xe, Cp_air, rho_air, UA_1, UA_2, UA_3, M_m_Eva, INPUT_SCALE_MAX, ...
+			FAN_MAX, ref)
 
+
+% Simulating
+evap_arr = zeros(N,3);
+for i=8000:N
+	evap_arr(i,:) = evap.simulate(hin(i), pin(i), mdotin(i), mdotout(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+end
+% 
+% evap_arr = zeros(N,29);
+% for i=N_OP:N_OP + 3
+% 	evap_arr(i,:) = evap.simulate(hin(i), pin(i), mdotin(i), mdotout(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+% end
+% legs = ["Tlv", "v1", "sigma", "Ustarp","Qfan ","Ustarmdot ","Vbardotair", ...
+% 	"mbardotair","Tretfan ","Qamv", "Tretsh", "Qamlv","Qmvmlv","Qmlv", ...
+% 	"mdotdew","Qmv","hv","Vlv","pout ", "Mlvdiriv","Mvdiriv","mdotairdiriv" ...
+% 	,"Tmlvdiriv	","Tmvdiriv","Mlv","Mv","mdotair","Tmlv","Tmv"]
+% 
+% myfig(-1, [width height])
+% for i = 1:29
+% 	subplot(6,5,i)
+% 	plot(evap_arr(8000,i),'*')
+% 	legend(legs(i))
+% end
+
+myfig(7, [width height])
+subplot(311)
+plot(t, evap_arr(:,1))
+hold on
+plot(t, pout)
+legend('Evaporator output: pout', 'Krestens model')
+
+subplot(312)
+plot(t, evap_arr(:,2))
+hold on
+plot(t, hout)
+legend('Evaporator output: hout', 'Krestens model')
+
+subplot(313)
+plot(t, evap_arr(:,3))
+hold on
+plot(t, Tsup)
+legend('Evaporator output: Tsup', 'Krestens model')
+
+% %%% checking that the inputs make sense
+% myfig(71, [width height])
+% subplot(511)
+% plot(t, hin)
+% hold on
+% plot(t, hout)
+% legend('Input: hin', 'Output: hout')
+% 
+% subplot(512)
+% plot(t, pin)
+% hold on
+% plot(t, pout)
+% legend('Input: pin', 'Output: pout')
+% 
+% subplot(513)
+% plot(t, Tv)
+% hold on
+% % plot(t, Tv2)
+% plot(t, Tret)
+% plot(t, Tsup)
+% % legend('Input: Tv: from evap_out_line', 'Input: Tv: from tsuc', 'Input: Tret', 'Output: Tsup')
+% legend('Input: Tv: from evap_out_line', 'Input: Tret', 'Output: Tsup')
+% 
+% subplot(514)
+% plot(t, mdotin)
+% hold on
+% plot(t, mdotout)
+% legend('Input: mdotin', 'Input: mdotout')
+% 
+% subplot(515)
+% stairs(Ufan_t, Ufan+1)
+% hold on
+% stairs(t, Ufan_new)
+% legend('Input: Ufan', 'Input: Ufan_new')

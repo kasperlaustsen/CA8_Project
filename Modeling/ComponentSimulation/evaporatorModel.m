@@ -116,61 +116,68 @@ classdef evaporatorModel < handle
 
 		function out = simulate(obj, hin, pin, mdotin, mdotout, Tv, Tret, Ufan, Ts)	
 			% Internal variables
-			obj.Tlv		= obj.Philut(hin, pin);
-
-			obj.v1		= obj.Lambdalut(pin, obj.Xe);
-			obj.sigma	= obj.Mlv * obj.v1 / obj.Vi;
+			obj.Tlv				= obj.Philut(hin, pin);
+		
+			obj.v1				= obj.Lambdalut(pin, obj.Xe);
+			obj.sigma			= obj.Mlv * obj.v1 / obj.Vi;
 
 			% Fan shit
-			obj.Ustarp	= (scalein(Ufan)*100-55.56)*0.0335;
-			obj.Qfan	= 177.76 + 223.95*obj.Ustarp + 105.85*obj.Ustarp^2 + 16.74*obj.Ustarp^3;
-			obj.Ustarmdot	= (scalein(Ufan)*3060 - 2270.4)*0.0017;
-			obj.Vbardotair = 0.7273 + 0.1202*obj.Ustarmdot - 0.0044*obj.Ustarmdot; 
-			obj.mbardotair = obj.Vbardotair*obj.rhoair;
+			obj.Ustarp			= (obj.scalein(Ufan)*100-55.56)*0.0335;
+			obj.Qfan			= 177.76 + 223.95*obj.Ustarp + 105.85*obj.Ustarp^2 + 16.74*obj.Ustarp^3;
+			obj.Ustarmdot		= (obj.scalein(Ufan)*3060 - 2270.4)*0.0017;
+			obj.Vbardotair 		= 0.7273 + 0.1202*obj.Ustarmdot - 0.0044*obj.Ustarmdot; 
+			obj.mbardotair 		= obj.Vbardotair*obj.rhoair;
 			
-			obj.Tretfan = Tret + obj.Qfan/(obj.mdotair*obj.Cpair);
-			obj.Qamv	= obj.Cpair*obj.mdotair*(obj.Tretfan - obj.Tmv);
-			obj.Tretsh	= obj.Tretfan - obj.Qamv/(obj.mdotair * obj.Cpair);
-			obj.Qamlv	= obj.Cpair*obj.mdotair * (obj.Tretsh - obj.Tmlv);
+			obj.Tretfan 		= Tret + obj.Qfan/(obj.mdotair*obj.Cpair);
+			obj.Qamv			= obj.Cpair*obj.mdotair*(obj.Tretfan - obj.Tmv);
+			obj.Tretsh			= obj.Tretfan - obj.Qamv/(obj.mdotair * obj.Cpair);
+			obj.Qamlv			= obj.Cpair*obj.mdotair * (obj.Tretsh - obj.Tmlv);
 
 
 			% Heat transfers
-			obj.Qmvmlv	= obj.UA3*(obj.Tmv - obj.Tmlv);
-			obj.Qmlv	= obj.UA1*(obj.Tmlv - obj.Tlv)*obj.sigma;
-			 
-			obj.mdotdew = obj.Qmlv/(obj.hdewlut(pin) - hin);
-
+			obj.Qmvmlv			= obj.UA3*(obj.Tmv - obj.Tmlv);
+			obj.Qmlv			= obj.UA1*(obj.Tmlv - obj.Tlv)*obj.sigma;
+			 		
+			obj.mdotdew 		= obj.Qmlv/(obj.hdewlut(pin) - hin);
+	
 			% pout
-			obj.Qmv		= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
-			obj.hv		= obj.hdewlut(pin) + obj.Qmv/mdotin;
-			obj.Vlv		= obj.sigma * obj.Vi;
-			obj.pout	= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
+			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
+			obj.hv				= obj.hdewlut(pin) + obj.Qmv/mdotin; % possible divide by zero
+			obj.Vlv				= obj.sigma * obj.Vi;
+			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
 
 			% Update states
-			obj.Mlvdiriv	= mdotin - obj.mdotdew;
-			obj.Mvdiriv		= obj.mdotdew - mdotout;
-			obj.mdotairdiriv = (obj.mbardotair - obj.mdotair)/10;
-			obj.Tmlvdiriv	= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpair);
-			obj.Tmvdiriv	= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpair);
+			obj.Mlvdiriv		= mdotin - obj.mdotdew;
+			obj.Mvdiriv			= obj.mdotdew - mdotout;
+			obj.mdotairdiriv	= (obj.mbardotair - obj.mdotair)/10;
+			obj.Tmlvdiriv		= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpair);
+			obj.Tmvdiriv		= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpair);
 
-			obj.Mlv			= obj.Mlv * obj.Mlvdiriv	* Ts;
-			obj.Mv			= obj.Mv * obj.Mvdiriv		* Ts;
-			obj.mdotair		= obj.mdotair * obj.mdotairdiriv * Ts;
-			obj.Tmlv		= obj.Tmlv * obj.Tmlvdiriv	* Ts;
-			obj.Tmv			= obj.Tmv * obj.Tmvdiriv	* Ts;
+			obj.Mlv				= obj.Mlv 		+ obj.Mlvdiriv	* Ts;
+			obj.Mv				= obj.Mv 		+ obj.Mvdiriv		* Ts;
+			obj.mdotair			= obj.mdotair	+ obj.mdotairdiriv * Ts;
+			obj.Tmlv			= obj.Tmlv		+ obj.Tmlvdiriv	* Ts;
+			obj.Tmv				= obj.Tmv 		+ obj.Tmvdiriv	* Ts;
 
 			% Outputs
-			obj.Tsup = obj.Tretfan + (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair)
+			obj.Tsup = obj.Tretfan + (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair);
+% 			out = [obj.Tlv, obj.v1, obj.sigma, obj.Ustarp, obj.Qfan, ...
+% 				obj.Ustarmdot, obj.Vbardotair, obj.mbardotair, ...
+% 				obj.Tretfan, obj.Qamv, obj.Tretsh, obj.Qamlv, ...
+% 				obj.Qmvmlv, obj.Qmlv, obj.mdotdew, obj.Qmv, obj.hv, ...
+% 				obj.Vlv, obj.pout, obj.Mlvdiriv, obj.Mvdiriv, ...
+% 				obj.mdotairdiriv, obj.Tmlvdiriv, obj.Tmvdiriv, obj.Mlv, ...
+% 				obj.Mv, obj.mdotair, obj.Tmlv, obj.Tmv];
 
-			out = [obj.pout, obj.hv, obj.Tsup]
+			out = [obj.pout, obj.hv, obj.Tsup];
 		end
 
 		function v = Lambdalut(obj, p, X)
-			v = obj.REF.VPX(p*1e-5, X); % Pressure in bar
+			v = obj.ref.VPX(p*1e-5, X); % Pressure in bar
 		end
 
 		function T = Philut(obj, h, p)
-			T = obj.ref.THP(h, p*1e-5); % Pressure in bar
+			T = obj.ref.THP(h, p*1e-5) + 273.15; % Pressure in bar
 		end
 
 		function hdew = hdewlut(obj, p)
