@@ -1,52 +1,63 @@
 classdef valveModel < handle
 	properties
 		% Constants
+		% --------------
+		K		% Valve constant
+
 		THETA_MAX
 		INPUT_SCALE_MAX
-		K
 		
-		ref
-		vin
+		ref		% Coolprop Wrapper object input
+		
+		% "Internal variables"
+		% --------------
+		v		% Specific enthalpy
+
 		% Inputs
+		% --------------
 % 		pin
 % 		hin
 % 		mdotin
 % 		Theta
 		
-
-		% States
-
-
 		% Outputs
+		% --------------
 		pout
 	end
-% %%%EQUATIONS	
-% p1	=	p3 - m_dot_3_Con^2/ (Theta_2*(THETA_MAX/INPUT_SCALE_MAX)*K_Val)^2 * rho_CTV %ref.VHP(h4, p3)	; % CTV
-
 
 	methods
 		% Constructor method
 		% ---------------------------------
 		function obj = valveModel(THETA_MAX,INPUT_SCALE_MAX,K,ref)
+			obj.K				= 	K;
+
 			obj.THETA_MAX		= 	THETA_MAX;
 			obj.INPUT_SCALE_MAX = 	INPUT_SCALE_MAX;
-			obj.K				= 	K;
+
 			obj.ref				=	ref;
 		end
 		% ---------------------------------
 
 
-		function out = simulate(obj,pin, hin, mdotin, Theta)
-			% Update states
-
-			
+		function out = simulate(obj, pin, hin, mdotin, Theta)
 			% Outputs
-			obj.vin		=	obj.ref.VHP(hin, pin*1e-5);
-% 			obj.pout	=	pin - mdotin^2/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * ref.VHP(hin, pin);
-			obj.pout	=	pin - (mdotin*abs(mdotin))/ (Theta*(obj.THETA_MAX/obj.INPUT_SCALE_MAX)*obj.K)^2 * obj.vin;
+			obj.v	 =	obj.vhplut(hin, pin*1e-5);
+			obj.pout =	pin - (mdotin*abs(mdotin))/(scalein(Theta)*obj.K)^2 * obj.v;
 
-			out = obj.pout;
+			out		 = obj.pout;
 		end
 		
+		function v = vhplut(obj, h, p)
+			% Specific volume lut from specific enthalpy and pressure
+			v = obj.ref.VHP(h, p*1e-5);
+		end
+		
+	end
+
+	methods (Access = private)
+		function out = scalein(obj, in)
+			out = obj.THETA_MAX/obj.INPUT_SCALE_MAX * in;
+		end
+
 	end
 end
