@@ -9,8 +9,6 @@ classdef evaporatorModel < handle
 		Tmlvinit	% [K] 
 		Tmvinit		% [K] 
 		mdotairinit	% [kg/s] 
-
-		Tvinit		% [K] To set the "old" value of Tv (Tvold) for algebraic loop
 		
 		Vi			% [m3] Internal volume
 		Cpair		% [J/K] Heat capacity of air
@@ -51,8 +49,6 @@ classdef evaporatorModel < handle
 		hdew		% [J/kg] LUT. From pressure before evaporator
 		mdotdew		% [kg/s] 
 
-		Tvold		% [K] 
-
 		% Inputs
 		% --------------
 		% hin
@@ -61,6 +57,7 @@ classdef evaporatorModel < handle
 		% mdotout
 		% Tret		% Return air temperature
 		% Ufan
+		% Tv		% [K] 
 
 		% States
 		% --------------
@@ -79,7 +76,6 @@ classdef evaporatorModel < handle
 		% --------------
 		pout		% [Pa] LUT
 		hv			% [J/kg] Output vapor specific enthalpy
-		Tv			% [K] LUT. liquid-vapor refrig temp
 		Tsup		% [K] 
 	end
 	
@@ -89,7 +85,7 @@ classdef evaporatorModel < handle
 		% Constructor method
 		% ---------------------------------
 		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
-			Vi, Xe, Cpair, rhoair, UA1, UA2, UA3, Mm, Tvinit, INPUT_SCALE_MAX, ...
+			Vi, Xe, Cpair, rhoair, UA1, UA2, UA3, Mm, INPUT_SCALE_MAX, ...
 			FAN_MAX, ref)
 			obj.Mlvinit		= Mlvinit		;
 			obj.Mvinit		= Mvinit		;
@@ -110,17 +106,15 @@ classdef evaporatorModel < handle
 			obj.UA3			= UA3			;
 			obj.Mm			= Mm			;
 			obj.Xe			= Xe			;
+
 			obj.INPUT_SCALE_MAX = INPUT_SCALE_MAX;
 			obj.FAN_MAX		= FAN_MAX		;
-
-			obj.Tvold		= Tvinit		; % A Tv variable is needed to get things started
-
 			obj.ref			= ref			; % CoolProp Wrapper object
 		end
 		% ---------------------------------
 
 
-		function out = simulate(obj, hin, pin, mdotin, mdotout, Tret, Ufan, Ts)	
+		function out = simulate(obj, hin, pin, mdotin, mdotout, Tv, Tret, Ufan, Ts)	
 			% Internal variables
 			obj.Tlv		= obj.Philut(hin, pin);
 
@@ -146,14 +140,11 @@ classdef evaporatorModel < handle
 			 
 			obj.mdotdew = obj.Qmlv/(obj.hdewlut(pin) - hin);
 
-			% Tv and pout
-			obj.Qmv		= obj.UA2*(obj.Tmv - obj.Tvold)*(1 - obj.sigma);
+			% pout
+			obj.Qmv		= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
 			obj.hv		= obj.hdewlut(pin) + obj.Qmv/mdotin;
 			obj.Vlv		= obj.sigma * obj.Vi;
 			obj.pout	= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
-			obj.Tv		= obj.Philut(obj.hv, obj.pout);
-			% Save old value
-			obj.Tvold	= obj.Tv;
 
 			% Update states
 			obj.Mlvdiriv	= mdotin - obj.mdotdew;
