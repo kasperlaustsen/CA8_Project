@@ -142,7 +142,7 @@ classdef evaporatorModel < handle
 	
 			% pout
 			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
-			obj.hv				= obj.hdewlut(pin) + obj.Qmv/mdotin; % possible divide by zero
+			obj.hv				= obj.hdewlut(pin) + obj.Qmv/mdotdew; % possible divide by zero
 			obj.Vlv				= obj.sigma * obj.Vi;
 			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
 
