@@ -410,7 +410,7 @@ legend('mdotout2: vapor mass flow','Krestens model')
 % 
 
 %% Testing boxModel
-
+% hej martin
 
 %% TESTING evaporatorModel
 Ts = 1; Mlvinit = 0.2; Mvinit = 1/1000; Tmlvinit = -10+273.15; Tmvinit = -10+273.15;
