@@ -81,7 +81,7 @@ classdef boxModel < handle
 		% ---------------------------------
 
 
-		function out = simulate(obj, Ufan2, mdotair, Tsup, Tambi, Ts)
+		function [vars, out] = simulate(obj, Ufan2, mdotair, Tsup, Tambi, Ts)
 			% Internal variables
 			obj.Tret	= obj.Tair;
 			obj.Ustarp	= (obj.scalein(Ufan2)*100 - 55.56)*0.0335;
@@ -104,6 +104,8 @@ classdef boxModel < handle
 
 			% Outputs
 			out = [obj.Tret];
+			vars = [obj.Ustarp, obj.Qfan2, obj.Qcool, obj.Qamb, obj.Qca, obj.Qba, ...
+				obj.Tair, obj.Tairderiv, obj.Tbox, obj.Tboxderiv, obj.Tcargo, obj.Tcargoderiv];
 		end
 	end
 		
