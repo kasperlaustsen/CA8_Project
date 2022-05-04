@@ -257,15 +257,15 @@ ylabel('Pressure [Pa]')
 
 %% TESTING condenser throttle valve model
 
-INPUT_SCALE_MAX = 1;	% Inputs are scaled between 0 and this value
-THETA_MAX = 100;			% max value of valves
+INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
+THETA_MAX = 1;			% max value of valves
 
 % Constants
 C_Val   	= 0.64;											% discharge coefficient
 A_Val   	= ((20/2)^2)*pi*10^-6;							% Cross sectional area
 % K_Val   	= C_Val*A_Val;									% collected constant
-K_Val		= 2e-8;											% approximate value 1e-5from krestens phd
-K_Val		= 1.4e-9;										% good value for linear type valve.
+K_Val		= 2e-5;											% good value for equal percentage type - approximate value 1e-5from krestens phd
+K_Val		= 1.4e-5;										% good value for linear type valve.
 
 % Instantiating object:
 val = valveModel(THETA_MAX,INPUT_SCALE_MAX,K_Val, ref)
