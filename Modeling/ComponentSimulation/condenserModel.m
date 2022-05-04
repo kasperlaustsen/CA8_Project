@@ -19,6 +19,7 @@ classdef condenserModel < handle
 		Qrm					% []
 		Qma					% []
 		ref 
+		
 		% Inputs
 		% --------------
 % 		hin

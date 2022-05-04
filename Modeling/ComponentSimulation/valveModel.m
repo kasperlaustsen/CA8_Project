@@ -39,12 +39,15 @@ classdef valveModel < handle
 		% ---------------------------------
 
 
-		function out = simulate(obj, pin, hin, mdotin, Theta)
+		function [vars, out] = simulate(obj, pin, hin, mdotin, Theta)
 			% Outputs
-			obj.v	 =	obj.vhplut(hin, pin*1e-5);
-			obj.pout =	pin - (mdotin*abs(mdotin))/(scalein(Theta)*obj.K)^2 * obj.v;
+			obj.v	 =	obj.vhplut(hin, pin);
+			tempmdot	= (mdotin*abs(mdotin));
+			tempThetaK = 1/(obj.scalein(Theta)*obj.K)^2;
+			obj.pout =	pin - (mdotin*abs(mdotin)) * 1/(obj.scalein(Theta)*obj.K)^2 * obj.v;
 
 			out		 = obj.pout;
+			vars	 = [obj.v, tempmdot, tempThetaK];
 		end
 		
 		function v = vhplut(obj, h, p)
@@ -56,7 +59,12 @@ classdef valveModel < handle
 
 	methods (Access = private)
 		function out = scalein(obj, in)
+% 			m = 0.0461512;
+% 			c = 0;
+% 			fx = exp(m*in + c) - 1;
 			out = obj.THETA_MAX/obj.INPUT_SCALE_MAX * in;
+% 			out = obj.THETA_MAX/obj.INPUT_SCALE_MAX * fx;
+
 		end
 
 	end
