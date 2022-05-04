@@ -1,12 +1,15 @@
 clc;clear;close all;
 
-load('HiFi_model_data_for_component_tests.mat')
-ref = CoolPropPyWrapper('HEOS::R134a');
+load('HiFi_model_data_for_component_tests_02.mat')
+
 
 % for figures
 b = 2;
 width = [700*b];
 height = [500*b];
+
+%%
+ref = CoolPropPyWrapper('HEOS::R134a');
 %% Constants for simulations
 % N_start = 10 % when mdot_COM1 is non zero..
 N = size(out.tout,1);
@@ -431,6 +434,140 @@ legend('mdotout2: vapor mass flow','Krestens model')
 
 %% Testing boxModel
 
+Tair	= getData('T_air',	'', out); % For init
+Tambi	= getData('Tamb',	'', out); % For init but also input
+Tcargo	= getData('tcargo',	'', out); % For init
+
+% State Initial parameters
+Tcargoinit	= Tcargo(1); % Set to initial value of simulation
+Tairinit	= Tair(end); % Set to steady state value of simulation
+Tboxinit	= (Tambi(end) + Tair(end))  / 2; % Average of air and ambient air
+
+
+% Constants
+Cpair		= 1003.5; % from coll comp
+Cpbox		= 890; % coll comp says 447 but thats an erorr. It's 890 (aluminium)
+Cpcargo		= 447; % from coll comp
+
+UAtotal		= (0.6000 * 12*2.5*2.5); % Heat transfer from ambieant air -> box air. from sim
+UAamb		= UAtotal/2; % From simulation
+UAba		= UAtotal/2;
+UAcargo		= 20*100; % from simulation
+% UAcargo		= 500; % from kresten report
+% UAcargo		= 20; % from simulation
+
+Mair		= (13.4*2.35*2.46)*1.225; % form coll comp, rho air = 1.225;
+Mbox		= 500; % coll comp says 1000. But 500 kg is prob closer???
+Mcargo		= 1000; % from simulation
+
+FAN_MAX			= 1;
+INPUT_SCALE_MAX = 100;		
+
+% Instantiating object:
+box = boxModel(Tairinit, Tboxinit, Tcargoinit, Cpair, Cpbox, Cpcargo, UAamb, UAba, UAcargo, ...
+				Mair, Mbox, Mcargo, FAN_MAX, INPUT_SCALE_MAX);
+
+% these inputs are taken to test whether our model and HifiModel agrees
+mdotair	= getData('m_dot_air',		'', out);
+Tsup	= getData('tsup',			'', out); 
+Tambi	= Tambi; % Defined further up for init
+
+Ufan2		= getData('evap_fan_pct', '', 	out); 	
+Ufan2_t		= getTime('evap_fan_pct',		out); 	
+Ufan2_new	= transformControllerInput(Ufan2, Ufan2_t, t) * 1;	
+
+														
+% outputs
+Tret	= getData('tret_bf_fan',	'',	out);
+
+
+% Checking signals
+Tair(end)-273.15
+Tambi(end)-273.15
+Tcargo(end)-273.15
+mdotair(end) % [kg/s]
+Tsup(end)-273.15
+Ufan2(end)
+
+% Qfan2 is going crazy. Lets see:
+Ufan2 = Ufan2(end)
+Ustarp	= ((Ufan2*FAN_MAX/INPUT_SCALE_MAX)*100 - 55.56)*0.0335
+Qfan2	= 177.76 + 223.95*Ustarp + 105.85*Ustarp^2 + 16.75*Ustarp^3
+
+% %Simulating
+boxvars_arr = zeros(N,12);
+boxout_arr = zeros(N,1);
+for i=1:N
+	[boxvars_arr(i,:), boxout_arr(i,:)] = box.simulate(Ufan2_new(i), mdotair(i), Tsup(i), Tambi(i), Ts_arr(i));
+end
+
+
+% Plotting
+% list of inputs: mdotair, Tsup, Tambi, Ufan2
+% list of outputs: Tret
+
+% Comparison plots
+myfig(71, [width height])
+ax1 = subplot(211)
+plot(t, boxout_arr(:))
+hold on
+plot(t, Tair(:))
+legend('model output: Tret/Tair', 'Krestens model: Tair/tret_bf_fan')
+xlabel('Time [s]')
+ylabel('Temperature [C]')
+title('Comparison of our model air temperature vs. Krestens model air temperature')
+
+ax2 = subplot(212)
+plot(t, boxvars_arr(:,11))
+hold on
+plot(t, Tcargo(:))
+legend('model output: Tcargo', 'Krestens model: tcargo')
+xlabel('Time [s]')
+ylabel(' []')
+title('Comparison of our model cargo temperature vs. Krestens model cargo temperature')
+
+linkaxes([ax1 ax2], 'x')
+
+% All variables plotted
+% Indexes for heat flows and temperatues
+Q_idx = [2,3,4,5,6];
+T_idx = [7,9,11];
+Tderiv_idx = [8, 10, 12]
+
+myfig(72, [width height]);
+ax1 = subplot(311);
+plot(t, boxvars_arr(:,Q_idx))
+legend('Qfan2', 'Qcool', 'Qamb', 'Qca', 'Qba')
+xlabel('Time [s]')
+ylabel('Heat flow [W]')
+title('Heat flows of box')
+
+ax2 = subplot(312);
+plot(t, (boxvars_arr(:,T_idx) - 273.15)) % NOTE!: K -> C 
+% hold on
+% plot(t, boxvars_arr(:,Tderiv_idx)) % NOTE!: NOT K -> C
+% legend('Tair', 'Tbox', 'Tcargo', 'Tairderiv',' Tboxderiv', 'Tcargoderiv')
+legend('Tair', 'Tbox', 'Tcargo')
+xlabel('Time [s]')
+ylabel('Temperature [C]')
+title('States: Temperatures')
+
+ax3 = subplot(313);
+plot(t, boxvars_arr(:,Tderiv_idx)) % NOTE!: NOT K -> C
+legend('Tairderiv',' Tboxderiv', 'Tcargoderiv')
+xlabel('Time [s]')
+ylabel('Temperature [C]')
+title('State derivatives: Temperatures')
+
+linkaxes([ax1 ax2 ax3], 'x')
+
+
+
+% ALL variables
+% plot(t, boxvars_arr(:,:))
+% legend('Ustarp', 'Qfan2', 'Qcool', 'Qamb', 'Qca', 'Qba', ...
+% 		'Tair', 'Tairderiv', 'Tbox', 'Tboxderiv', 'Tcargo', 'Tcargoderiv')
+
 
 %% TESTING evaporatorModel
 N_OP = 6000;
@@ -517,7 +654,7 @@ end
 
 
 
-myfig(7, [width height])
+myfig(8, [width height])
 ax1 = subplot(311)
 plot(t, evap_arr2(:,1))
 hold on
@@ -540,7 +677,7 @@ linkaxes([ax1 ax2 ax3], 'x')
 
 
 %%% checking that the inputs make sense
-myfig(71, [width height])
+myfig(81, [width height])
 subplot(511)
 plot(t, hin)
 hold on
