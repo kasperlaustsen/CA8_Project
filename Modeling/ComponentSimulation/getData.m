@@ -9,7 +9,9 @@ function data = getData(name, measurement, out)
 %				'evap_out_line'	'tret'	'tret_bf_fan'	'tsuc'	'tsup'	
 %				'ft_exv_out_line'	'ft_liq_out_line'	'ft_vap_out_line'	
 %				'Tamb'	''	''	'cpr_disc_line'	'meas_com1in'	
-%				'meas_com1out'	'meas_com2in'
+%				'meas_com1out'	'meas_com2in' 'm_dot_air' 'T_air'
+
+% Note: T_air and tret_bf_fan are the same.
 % 
 % measurements can be: 
 % 			'p'		: 	Pressure		[bar]
