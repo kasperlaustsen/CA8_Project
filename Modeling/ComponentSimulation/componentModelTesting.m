@@ -191,16 +191,17 @@ pin				= getData('cpr_disc_line', 'p', out)*1e5;
 
 
 % Simulating
-cond_arr = zeros(N,5);
+condout_arr = zeros(N,5);
+condvars_arr = zeros(N,7);
 for i = 1:N
-	cond_arr(i,:) = cond.simulate(mdotin(i), hin(i), pout(i), T_r(i), T_ambi(i), U_fan_new(i), 	Ts_arr(i));
+	[condvars_arr(i,:), condout_arr(i,:)] = cond.simulate(mdotin(i), hin(i), pout(i), T_r(i), T_ambi(i), U_fan_new(i), 	Ts_arr(i));
 end
 
 myfig(4, [width height])
 subplot(311)
 plot(t,hout)
 hold on
-plot(t, cond_arr(:,1))
+plot(t, condout_arr(:,1))
 ylim([-4e5 4e5])
 legend('Enthalpy measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
@@ -209,7 +210,7 @@ ylabel('Enthalpy [J/kg]')
 subplot(312)
 plot(t,mdotout)
 hold on
-plot(t, cond_arr(:,2))
+plot(t, condout_arr(:,2))
 legend('Flow measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
 ylabel('Mass flow [kg/s]')
@@ -217,7 +218,7 @@ ylabel('Mass flow [kg/s]')
 subplot(313)
 plot(t,pin)
 hold on
-plot(t, cond_arr(:,3))
+plot(t, condout_arr(:,3))
 % ylim([-4e5 4e5])
 legend('Pressure measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')

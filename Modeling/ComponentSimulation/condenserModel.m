@@ -2,24 +2,28 @@ classdef condenserModel < handle
 	properties
 		% Constants
 		% --------------
-		Mrinit				% [] 
-		Tminit				% [] 
+		lambda				% [] 
+		Mm					% [] 
+		Cpm					% [] 
 		UArm				% [] 
 		UAma				% [] 
-		Vi					% [] 
+		Vi					% []
+
+		Mrinit				% [] 
+		Tminit				% []
+
+		FAN_MAX				% [] 
+		INPUT_SCALE_MAX		% [] 
+
+		ref  % Coolprop wrapper 
 
 		% "Internal" variables
 		% --------------
 		v					% [] 
-		lambda				% [] 
-		Mm					% [] 
-		Cpm					% [] 
-		FAN_MAX				% [] 
-		INPUT_SCALE_MAX		% [] 
 		Qrm					% []
 		Qma					% []
-		ref 
-		
+
+
 		% Inputs
 		% --------------
 % 		hin
@@ -76,7 +80,7 @@ classdef condenserModel < handle
 		% ---------------------------------
 
 
-		function out = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, Ts)
+		function [vars, out] = simulate(obj, mdotin, hin, pout,	Tr, Tambi, Ufan, Ts)
 			obj.pin		= 	pout - obj.lambda*mdotin * 1e5;
 			obj.v		=	obj.ref.VHP(hin,obj.pin);
 			obj.Qrm		=	obj.UArm * (Tr - obj.Tm);	
@@ -93,6 +97,7 @@ classdef condenserModel < handle
 
 			% Outputs
 			out = [obj.hout obj.mdotout obj.pin obj.Mr obj.Tm];
+			vars = [obj.v, obj.Qrm, obj.Qma, obj.Mr, obj.Mrdiriv, obj.Tm, obj.Tmdiriv];
 		end
 
 		function out = scalein(obj, in)
