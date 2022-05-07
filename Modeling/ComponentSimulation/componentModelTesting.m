@@ -17,7 +17,7 @@ N = size(out.tout,1);
 t = out.tout;
 Ts_arr = [out.tout(2:N); out.tout(end)] - [0; out.tout(1:end-1)];
 
-% %%% visualisation of sample variable sample time
+% %%% visualisation of variable sample time
 % myfig(i)
 % subplot(211)
 % plot(t)
@@ -30,10 +30,11 @@ Ts_arr = [out.tout(2:N); out.tout(end)] - [0; out.tout(1:end-1)];
 % xlabel('Sample number')
 % ylabel('Simulink time sample')
 
-%% TESTING compressorModelV2
 
+%% TESTING compressorModelV2
+% =========================================================================
 % Inputs for instantiation
-V_1_COM1   	= 31e-5;										% 50 cm^3 - found in krestens phd. New value is used to fit it to data.
+V_1_COM1   	= 33e-5;										% 50 cm^3 - found in krestens phd. New value is used to fit it to data.
 V_1_COM2   	= V_1_COM1/2;									% 2nd stage is half the first
 V_C_COM1   	= V_1_COM1*1e-2;								% 5pct of pre stroke volume
 V_C_COM2   	= V_1_COM2*1e-2;								% 5pct of pre stroke volume
@@ -48,20 +49,21 @@ V1 = V_1_COM2; Vc = V_C_COM2; kl1 = kl_1; kl2 = kl_2; Ccp = 1.19; Ccv = 1;
 comp1V2 = compressorModel(V1, Vc, kl1, kl2, Ccp, Ccv, OMEGA_MAX, INPUT_SCALE_MAX, ref);
 
 % these inputs are taken to test whether our model and HifiModel agrees
-pin		= getData('meas_com2in'		,'p',	out)*1e5;
-Tin		= getData('meas_com2in'		,'T',	out)+ 273.15;
-pout	= getData('cpr_disc_line'	,'p',	out)*1e5;
-omega	= getData('Fcpr'			,''	,	out);
-omega_t = getTime('Fcpr', out);
+% pin		= getData('meas_com2in'		,'p',	out)*1e5;
+p5		= getData('meas_com2in'		,'p',	out)*1e5;			% pin
+T7		= getData('meas_com2in'		,'T',	out)+ 273.15;		% Tin
+p1		= getData('cpr_disc_line'	,'p',	out)*1e5;			% pout
+omega	= getData('Fcpr'			,''	,	out);				
+omega_t = getTime('Fcpr', out);	
 omega_new = transformControllerInput(omega,omega_t,t);
 
 % output
-mdot	= getData('cpr_disc_line'	,'m',	out);
+mdot1	= getData('cpr_disc_line'	,'m',	out);
 
 % Simulating
 comp1V2out_arr = zeros(N,3);
 for i=1:N
-	comp1V2out_arr(i,:) = comp1V2.simulate(pin(i), pout(i), Tin(i), omega_new(i));
+	comp1V2out_arr(i,:) = comp1V2.simulate(p5(i), p1(i), T7(i), omega_new(i));
 end
 
 
@@ -70,46 +72,38 @@ myfig(2, [width height])
 % subplot(211)
 plot(t,comp1V2out_arr(:,1))
 hold on
-plot(t, mdot)
-legend(['compModel, Vol: ', num2str(V_1_COM2), 'Original Vol: 50e-5'], 'Krestens model')
-title('Compressor flow comparison')
+plot(t, mdot1)
+legend('compModel', 'Krestens model')
+% title('Compressor flow comparison')
 xlabel('Time [s]')
 ylabel('Mass flow [kg/s]')
-
-% subplot(212)
-% % plot(t, mdot./comp1V2origout_arr(:,1))
-% % hold on
-% plot(t, mdot./comp1V2out_arr(:,1))
-% xlabel('Time [s]')
-% ylabel('Ratio [\cdot]')
-% % legend('Hifi model / Original model', 'Hifi model / Hacked model')
-% legend('Hifi model / comprModel')
-% title('Ratio between flows')
+sgtitle('Compressor flow comparison')
 
 
 %% TESTING pjjModel
+% =========================================================================
 
 % Inputs for instantiations
-Mpjjinit = 0; % inital mass inside pjj
+Mpjjinit = 0.015; % inital mass inside pjj
 
 % Instantiating object:
 pjj = pjjModel(Mpjjinit);
 
 
 % these inputs are taken to test whether our model and HifiModel agrees
-mdotin1 	= getData('ft_exv_out_line'	,'m',	out)	% flash tank flow
-hin1		= getData('ft_exv_out_line'	,'h',	out)		% enthalpy flash tank
-
-mdotin2 	= getData('evap_out_line'	,'m',	out)	% compressor 1 flow
-hin2		= getData('meas_com1out'	,'h',	out)		% enthalpy compressor 1 out
-
-mdotout 	= getData('cpr_disc_line'	,'m',	out)		% compressor 2 flow
-hout		= getData('cpr_disc_line'	,'h',	out)
+mdot4 	= getData('ft_exv_out_line'	,'m',	out)		% flash tank flow			- mdotin1 					
+h5		= getData('ft_exv_out_line'	,'h',	out)		% enthalpy flash tank		- hin1				
+					
+mdot1 	= getData('evap_out_line'	,'m',	out)		% compressor 1 flow			- mdotin2 	
+h1		= getData('meas_com1out'	,'h',	out)		% enthalpy compressor 1 out	- hin2					
+					
+mdot2 	= getData('cpr_disc_line'	,'m',	out)		% compressor 2 flow			- mdotout 		
+h2		= getData('cpr_disc_line'	,'h',	out)		% compressor 2 enthalpy		- hout
 
 % Simulating
 pjj_arr = zeros(N,2);
 for i=1:N
-	pjj_arr(i,:) = pjj.simulate(mdotin1(i), mdotin2(i), mdotout(i), hin1(i), hin2(i), Ts_arr(i));					   
+	pjj_arr(i,:) = pjj.simulate(mdot4(i), mdot1(i), mdot2(i), h5(i), h1(i), Ts_arr(i));					   
 end
 
 
@@ -118,10 +112,10 @@ myfig(3, [width height])
 subplot(211)
 plot(t,pjj_arr(:,1))
 hold on
-plot(t,hout)
+plot(t,h2)
 
 legend('PJJ model', 'Enthalpy measurement, Krestens model')
-title('PJJ comparison of enthalpy with start of simulation')
+title('Output comparison with Krestens simulation')
 xlabel('Time [s]')
 ylabel('Enthalpy [J/kg]')
 
@@ -131,9 +125,9 @@ hold on
 xlabel('Time [s]')
 ylabel('Mass [kg]')
 legend('M_{PJJ}')
-title('Mass in PJJ with start of simulation. Initialised with M = 0')
+title('State: M_{PJJ}')
+sgtitle('Pipe Joining Junction')
 
-% 122-167 
 
 % %%% checking that the inputs make sense, at least the flows. 
 % myfig(31, [width height])
@@ -154,15 +148,16 @@ title('Mass in PJJ with start of simulation. Initialised with M = 0')
 % sgtitle('PJJ: Plot of the inputs and outputs of krestens simulation')
 
 %% TESTING condenserModel
+% =========================================================================
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
 FAN_MAX = 1;			% max value of fan	
 
 % Inputs for instantiations
-Mrinit = 0.5;			% initial refrigerant mass inside condenser
-Tminit = 273.15 + 30;	% initial metal temperature condenser
-UA_ma		= 650;		% found kresten PHD
-UA_rm		= 1500;		% found kresten PHD
+Mrinit		= 0.7;			% initial refrigerant mass inside condenser
+Tminit		= 273.15 + 30;	% initial metal temperature condenser
+UA_ma		= 650/3;		% found kresten PHD
+UA_rm		= 1500/1;		% found kresten PHD
 lambda		= 0.1;		% pressure drop constant, found in krestens sim model
 Cp_m		= 387;		% evaporator and condeser metal (copper), kresten approve
 M_m_Con		= 22.976;	% found in ??? (coefficient sheet?
@@ -170,96 +165,155 @@ V_i_Con		= 1.8*1e-3;	% Condenser volume
 
 
 % Instantiating object:
-cond = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m,	ref, FAN_MAX, INPUT_SCALE_MAX)
+cond = condenserModel(Mrinit, Tminit, UA_rm, UA_ma, V_i_Con, lambda, M_m_Con, Cp_m,	ref, FAN_MAX, INPUT_SCALE_MAX);
 
 
 % these inputs are taken to test whether our model and HifiModel agrees
-mdotin			= getData('cpr_disc_line', 'm', out); 
-hin				= getData('cpr_disc_line', 'h', out);
-pout			= getData('cond_out_line', 'p', out)*1e5;	
-T_r				= getData('cpr_disc_line', 'T', out) + 273.15;  
-T_ambi			= getData('Tamb',			'', out); 	
-U_fan			= getData('cond_fan_pct',	'', out);  
-U_fan_t			= getTime('cond_fan_pct',		out);
-U_fan_new		= transformControllerInput(U_fan, U_fan_t, t); 
-
+mdot2			= getData('cpr_disc_line', 'm', out); 					% mdotin	
+h3				= getData('cpr_disc_line', 'h', out);					% hin		
+p3				= getData('cond_out_line', 'p', out)*1e5;				% pout			
+T3				= getData('cpr_disc_line', 'T', out) + 273.15; 			% T_r				
+T_ambi			= getData('Tamb',			'', out); 					% T_ambi		
+U_fan			= getData('cond_fan_pct',	'', out);  					% U_fan	
+U_fan_t			= getTime('cond_fan_pct',		out);					% U_fan_t	
+U_fan_new		= transformControllerInput(U_fan, U_fan_t, t); 			% U_fan_new		
+% 
 % outputs to benchmark up against
-hout			= getData('cond_out_line', 'h', out);
-mdotout			= getData('cond_out_line', 'm', out);
-pin				= getData('cpr_disc_line', 'p', out)*1e5;	
+h4				= getData('cond_out_line', 'h', out);					% hout	
+mdot3			= getData('cond_out_line', 'm', out);					% mout
+p2				= getData('cpr_disc_line', 'p', out)*1e5;				% pin
 
 
 
 % Simulating
-condout_arr = zeros(N,5);
-condvars_arr = zeros(N,7);
-for i = 1:N
-	[condvars_arr(i,:), condout_arr(i,:)] = cond.simulate(mdotin(i), hin(i), pout(i), T_r(i), T_ambi(i), U_fan_new(i), 	Ts_arr(i));
+Nstart = 1100; % Starting index (is at 131 seconds)
+
+condout_arr = zeros(N-Nstart+1,3);
+condvars_arr = zeros(N-Nstart+1,7);
+for i = 1:(N-Nstart)
+	[condvars_arr(i,:), condout_arr(i,:)] = cond.simulate(mdot2(i+Nstart), h3(i+Nstart), p3(i+Nstart), T3(i+Nstart), T_ambi(i+Nstart), U_fan_new(i+Nstart), 	Ts_arr(i+Nstart));
 end
 
-myfig(4, [width height])
-subplot(311)
-plot(t,hout)
+tp = t(Nstart:end);
+
+yl1 = 1e5*[1 3.5];
+yl2 = [0 0.15];
+yl3 = 1e5*[7 10.5];
+yl4 = [55 105];
+
+% Plotting 1
+% ----------------------
+myfig(41, [width height]);
+subplot(411)
+plot(tp,h4(Nstart:end))
 hold on
-plot(t, condout_arr(:,1))
+plot(tp, condout_arr(:,1))
 ylim([-4e5 4e5])
 legend('Enthalpy measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
 ylabel('Enthalpy [J/kg]')
+ylim(yl1)
 
-subplot(312)
-plot(t,mdotout)
+subplot(412)
+plot(tp,mdot3(Nstart:end))
 hold on
-plot(t, condout_arr(:,2))
+plot(tp, condout_arr(:,2))
 legend('Flow measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
 ylabel('Mass flow [kg/s]')
+ylim(yl2)
 
-subplot(313)
-plot(t,pin)
+subplot(413)
+plot(tp,p2(Nstart:end))
 hold on
-plot(t, condout_arr(:,3))
+plot(tp, condout_arr(:,3))
 % ylim([-4e5 4e5])
 legend('Pressure measurement, Krestens model', 'CondenserModel')
 xlabel('Time [s]')
 ylabel('Pressure [Pa]')
+ylim(yl3)
+
+subplot(414)
+plot(tp, U_fan_new(Nstart:end))
+% ylim([-4e5 4e5])
+legend('Ufan')
+xlabel('Time [s]')
+ylabel('Fan speed [%]')
+ylim(yl4)
+sgtitle('Condenser')
+
+
+% Plotting 2
+% ----------------------
+
+% [obj.v, obj.Qrm, obj.Qma, obj.Mr, obj.Mrdiriv, obj.Tm, obj.Tmdiriv];
+% myfig(42, [width height]);
+% subplot(411)
+% plot(tp, condvars_arr(:,1))
+% % ylim([-4e5 4e5])
+% legend('v')
+% xlabel('Time [s]')
+% ylabel('x [x]')
+% 
+% subplot(412)
+% plot(tp, condvars_arr(:,2:3))
+% legend('Q_{rm}', 'Q_{ma}')
+% xlabel('Time [s]')
+% ylabel('x [x]')
+% 
+% subplot(413)
+% plot(tp, condvars_arr(:,4))
+% % ylim([-4e5 4e5])
+% legend('M_r')
+% xlabel('Time [s]')
+% ylabel('x')
+% 
+% subplot(414)
+% plot(tp, condvars_arr(:,6))
+% hold on
+% plot(tp, T_r(Nstart:end))
+% % ylim([-4e5 4e5])
+% legend('T_m', 'T_r Kresten model input')
+% xlabel('Time [s]')
+% ylabel('x')
 
 % %%% checking that the inputs make sense,  
-% myfig(41, [width height])
+% myfig(43, [width height])
 % subplot(321)
-% plot(t,mdotin)
+% plot(tp,mdotin)
 % hold on
-% plot(t,mdotout)
+% plot(tp,mdotout)
 % legend('mdotin', 'mdotout')
 % 
 % subplot(322)
-% plot(t,hin)
+% plot(tp,hin)
 % hold on
-% plot(t,hout)
+% plot(tp,hout)
 % legend('hin','hout')
 % 
 % subplot(323)
-% plot(t,pout)
+% plot(tp,pout)
 % hold on
-% plot(t,pin)
+% plot(tp,pin)
 % legend('pout','pin')
 % 
 % subplot(324)
-% plot(t,T_r)
+% plot(tp,T_r)
 % legend('T_r')
 % 
 % subplot(325)
-% plot(t,T_ambi)
+% plot(tp,T_ambi)
 % legend('T_{ambi}')
 % 
 % subplot(326)
 % stairs(U_fan_t,U_fan+1)
 % hold on
-% stairs(t,U_fan_new)
+% stairs(tp,U_fan_new)
 % legend('controller sampled U_{fan}', 'variable sampled U_{fan}')
 % sgtitle('Condenser: Plot of the inputs and outputs of krestens simulation')
 
 %% TESTING condenser throttle valve model
+% =========================================================================
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
 THETA_MAX = 1;			% max value of valves
@@ -268,66 +322,79 @@ THETA_MAX = 1;			% max value of valves
 C_Val   	= 0.64;											% discharge coefficient
 A_Val   	= ((20/2)^2)*pi*10^-6;							% Cross sectional area
 % K_Val   	= C_Val*A_Val;									% collected constant
-K_Val		= 2e-5;											% good value for equal percentage type - approximate value 1e-5from krestens phd
-K_Val		= 1.4e-5;										% good value for linear type valve.
+% K_Val		= 2e-5;											% good value for equal percentage type - approximate value 1e-5from krestens phd
+K_Val		= 1.235e-5;										% good value for linear type valve.
+% K_Val		= 0.8e-5;										% good value for quick opening valve.
+
+valveType = 'lin'; % Valve type: 'ep' = equal percentage, 'lin' linear, 'fo' = fast opening
 
 % Instantiating object:
-val = valveModel(THETA_MAX,INPUT_SCALE_MAX,K_Val, ref)
+val = valveModel(valveType, THETA_MAX,INPUT_SCALE_MAX,K_Val, ref)
 
 % these inputs are taken to test whether our model and HifiModel agrees
-pin			= getData('cond_out_line', 'p', out)*1e5;	
-hin			= getData('cond_out_line', 'h', out);
-mdotin		= getData('cond_out_line', 'm', out); 
-Theta		= getData('Vcond', '',	out);
-Theta_t		= getTime('Vcond',		out);
-Theta_new	= transformControllerInput(Theta, Theta_t, t); 																
-
-% output
-pout		= getData('ft_in_line', 'p', out)*1e5;	
+p3			= getData('cond_out_line', 'p', out)*1e5;						% pin						
+h4			= getData('cond_out_line', 'h', out);							% hin					
+mdot3		= getData('cond_out_line', 'm', out); 							% mdotin			
+Theta		= getData('Vcond', '',	out);									% Theta	
+Theta_t		= getTime('Vcond',		out);									% Theta_t	
+Theta_new	= transformControllerInput(Theta, Theta_t, t);					% Theta_new																				
+	
+% output	
+p1		= getData('ft_in_line', 'p', out)*1e5;							% pout
 
 
 
 % Simulating
 out_arr = zeros(N,1);
-var_arr = zeros(N,3);
+var_arr = zeros(N,4);
+
 for i=1:N
-	[var_arr(i,:), out_arr(i)] = val.simulate(pin(i), hin(i), mdotin(i), Theta_new(i));
+	[var_arr(i,:), out_arr(i)] = val.simulate(p3(i), h4(i), mdot3(i), Theta_new(i));
 end
 
-
+yl1 = 1e5*[3.5 10]
 myfig(5, [width height])
-ax1 = subplot(511)
-plot(t,mdotin)
-legend('mdotin')
 
-ax2 = subplot(512)
-plot(t,pin)
+
+ax2 = subplot(411)
+plot(t,p3)
 hold on
-plot(t,pout)
+plot(t,p1)
 plot(t,out_arr)
-legend('pin','pout', 'valveModel pout')
+ylim(yl1)
+legend('pin','pout', 'Linear valveModel pout')
+xlabel('Time [s]')
+ylabel('Pressure [Pa]')
+title('$P_{out} = p_{in} - \dot{m}^2 \cdot v \cdot \frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
 
-% ax3 = subplot(313)
+ax3 = subplot(412)
+plot(t,var_arr(:,3))
+% plot(t,var_arr)
+% legend('v (specific volume)', 'mdotsq', '1/ThetaK', 'Theta')
+legend('$\frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
+xlabel('Time [s]')
+ylabel('[]')
 
-ax3 = subplot(513)
-plot(t,var_arr)
-legend('v (specific volume)', 'mdotsq', '1/ThetaK')
-
-
-ax4 = subplot(514)
+ax4 = subplot(413)
 % plot(t,hin)
 % legend('hin')
-stairs(t,var_arr(:,1:2))
-legend('v', 'mdotsq')
+stairs(t,var_arr(:,2))
+legend('$\dot{m}^2$','interpreter','latex')
+xlabel('Time [s]')
+ylabel('Mass flow squared [kg^2/s^2]')
 
-ax5 = subplot(515)
-% plot(t,hin)
-% legend('hin')
-stairs(t,Theta_new)
-legend('Theta')
+ax5 = subplot(414)
+plot(t, var_arr(:,1))
+legend('$v$','interpreter','latex')
+xlabel('Time [s]')
+ylabel('Specific Volume [m^3/kg]')
+% stairs(t,Theta_new)
+% hold on
+% stairs(t, var_arr(:,4))
+% legend('Theta', 'Theta after opening degree')
 
-linkaxes([ax1 ax2 ax3 ax4 ax5],'x')
-
+linkaxes([ax2 ax3 ax4 ax5],'x')
+sgtitle('Valve model')
 
 
 
@@ -356,6 +423,7 @@ linkaxes([ax1 ax2 ax3 ax4 ax5],'x')
 
 
 %% TESTING flash tank model
+% =========================================================================
 % Constants
 
 
@@ -363,20 +431,20 @@ linkaxes([ax1 ax2 ax3 ax4 ax5],'x')
 ft = flashtankModel(ref);
 
 % these inputs are taken to test whether our model and HifiModel agrees
-pin			= getData('ft_in_line', 'p', out)*1e5;	
-hin			= getData('ft_in_line', 'h', out);
-mdotin		= getData('ft_in_line', 'm', out); 
+p1			= getData('ft_in_line', 'p', out)*1e5;				% pin			
+h4			= getData('ft_in_line', 'h', out);					% hin		
+mdot3		= getData('ft_in_line', 'm', out);					% mdotin	
 														
 % output
-hout1		= getData('ft_liq_out_line', 'h', out);	
-hout2		= getData('ft_vap_out_line', 'h', out);
-mdotout1	= getData('ft_liq_out_line', 'm', out);
-mdotout2 	= getData('ft_vap_out_line', 'm', out);
+h6		= getData('ft_liq_out_line', 'h', out);				% hout1		
+h5		= getData('ft_vap_out_line', 'h', out);				% hout2	
+mdot5	= getData('ft_liq_out_line', 'm', out);				% mdotout1
+mdot4 	= getData('ft_vap_out_line', 'm', out);				% mdotout2
 
 % %Simulating
 ft_arr = zeros(N,4);
 for i=1:N
-	ft_arr(i,:) = ft.simulate(pin(i), hin(i), mdotin(i));
+	ft_arr(i,:) = ft.simulate(p1(i), h4(i), mdot3(i));
 end
 
 
@@ -384,27 +452,27 @@ myfig(6, [width height])
 subplot(411)
 plot(t, ft_arr(:,1))
 hold on
-plot(t, hout1)
+plot(t, h6)
 legend('hout1: liquid enthalpy','Krestens model')
 
 subplot(412)
 plot(t, ft_arr(:,2))
 hold on
-plot(t, hout2)
+plot(t, h5)
 legend('hout2: vapor enthalpy','Krestens model')
 
 subplot(413)
 plot(t, ft_arr(:,3))
 hold on
-plot(t, mdotout1)
+plot(t, mdot5)
 legend('mdotout1: liquid mass flow','Krestens model')
 
 subplot(414)
 plot(t, ft_arr(:,4))
 hold on
-plot(t, mdotout2)
+plot(t, mdot4)
 legend('mdotout2: vapor mass flow','Krestens model')
-
+sgtitle('Flash Tank')
 % %%% checking that the inputs make sense
 % myfig(61, [width height])
 % subplot(511)
@@ -434,6 +502,7 @@ legend('mdotout2: vapor mass flow','Krestens model')
 % 
 
 %% Testing boxModel
+% =========================================================================
 
 Tair	= getData('T_air',	'', out); % For init
 Tambi	= getData('Tamb',	'', out); % For init but also input
@@ -571,14 +640,15 @@ linkaxes([ax1 ax2 ax3], 'x')
 
 
 %% TESTING evaporatorModel
+% =========================================================================
 N_OP = 6000;
 
 % these inputs are taken to test whether our model and HifiModel agrees
-hin			= getData('evap_exv_out_line', 'h', 	out);
-pin			= getData('evap_exv_out_line', 'p', 	out)*1e5;	
-mdotin		= getData('evap_exv_out_line', 'm', 	out); 
-mdotout		= getData('evap_out_line', 'm', 	out); 
-Tv			= getData('evap_out_line', 'T', 	out) + 273.15;	
+h6			= getData('evap_exv_out_line', 'h', 	out);					% hin				
+p4			= getData('evap_exv_out_line', 'p', 	out)*1e5;				% pin				
+mdot5		= getData('evap_exv_out_line', 'm', 	out); 					% mdotin	
+mdot1		= getData('evap_out_line', 'm',			out); 					% mdotout	
+Tv			= getData('evap_out_line', 'T',			out) + 273.15;			% Tv					 
 % Tv2			= getData('tsuc', '', 	out);	% adds a bit of heat from pipe in simulation. 
 Tret		= getData('tret', '', 	out);	
 Ufan		= getData('evap_fan_pct', '', 	out); 	
@@ -624,7 +694,7 @@ evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
 evap_arr1 = zeros(N,29);
 evap_arr2 = zeros(N,3);
 for i=N_OP:N
-	[evap_arr1(i,:) evap_arr2(i,:)]= evap.simulate(hin(i), pin(i), mdotin(i), mdotout(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+	[evap_arr1(i,:) evap_arr2(i,:)]= evap.simulate(h6(i), p4(i), mdot5(i), mdot1(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
 end
 
 % N_OP_stop = N_OP + 5
@@ -677,37 +747,37 @@ legend('Evaporator output: Tsup', 'Krestens model')
 linkaxes([ax1 ax2 ax3], 'x')
 
 
-%%% checking that the inputs make sense
-myfig(81, [width height])
-subplot(511)
-plot(t, hin)
-hold on
-plot(t, hout)
-legend('Input: hin', 'Output: hout')
-
-subplot(512)
-plot(t, pin)
-hold on
-plot(t, pout)
-legend('Input: pin', 'Output: pout')
-
-subplot(513)
-plot(t, Tv)
-hold on
-% plot(t, Tv2)
-plot(t, Tret)
-plot(t, Tsup)
-% legend('Input: Tv: from evap_out_line', 'Input: Tv: from tsuc', 'Input: Tret', 'Output: Tsup')
-legend('Input: Tv: from evap_out_line', 'Input: Tret', 'Output: Tsup')
-
-subplot(514)
-plot(t, mdotin)
-hold on
-plot(t, mdotout)
-legend('Input: mdotin', 'Input: mdotout')
-
-subplot(515)
-stairs(Ufan_t, Ufan+1)
-hold on
-stairs(t, Ufan_new)
-legend('Input: Ufan', 'Input: Ufan_new')
+% %%% checking that the inputs make sense
+% myfig(81, [width height])
+% subplot(511)
+% plot(t, hin)
+% hold on
+% plot(t, hout)
+% legend('Input: hin', 'Output: hout')
+% 
+% subplot(512)
+% plot(t, pin)
+% hold on
+% plot(t, pout)
+% legend('Input: pin', 'Output: pout')
+% 
+% subplot(513)
+% plot(t, Tv)
+% hold on
+% % plot(t, Tv2)
+% plot(t, Tret)
+% plot(t, Tsup)
+% % legend('Input: Tv: from evap_out_line', 'Input: Tv: from tsuc', 'Input: Tret', 'Output: Tsup')
+% legend('Input: Tv: from evap_out_line', 'Input: Tret', 'Output: Tsup')
+% 
+% subplot(514)
+% plot(t, mdotin)
+% hold on
+% plot(t, mdotout)
+% legend('Input: mdotin', 'Input: mdotout')
+% 
+% subplot(515)
+% stairs(Ufan_t, Ufan+1)
+% hold on
+% stairs(t, Ufan_new)
+% legend('Input: Ufan', 'Input: Ufan_new')

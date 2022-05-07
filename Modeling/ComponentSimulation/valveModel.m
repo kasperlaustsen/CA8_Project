@@ -12,6 +12,8 @@ classdef valveModel < handle
 		% "Internal variables"
 		% --------------
 		v		% Specific enthalpy
+		type    % valve type
+		thetareal % theta after opening degree function
 
 		% Inputs
 		% --------------
@@ -28,8 +30,9 @@ classdef valveModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = valveModel(THETA_MAX,INPUT_SCALE_MAX,K,ref)
+		function obj = valveModel(type, THETA_MAX,INPUT_SCALE_MAX,K,ref)
 			obj.K				= 	K;
+			obj.type			=	type;
 
 			obj.THETA_MAX		= 	THETA_MAX;
 			obj.INPUT_SCALE_MAX = 	INPUT_SCALE_MAX;
@@ -40,14 +43,17 @@ classdef valveModel < handle
 
 
 		function [vars, out] = simulate(obj, pin, hin, mdotin, Theta)
-			% Outputs
-			obj.v	 =	obj.vhplut(hin, pin);
+			% Temporary intermediate variables:
+			thetaoffset = 0.01; % Offset to not have zero valve opening for test
+			obj.thetareal = obj.valvechar(Theta, obj.type);
 			tempmdot	= (mdotin*abs(mdotin));
 			tempThetaK = 1/(obj.scalein(Theta)*obj.K)^2;
-			obj.pout =	pin - (mdotin*abs(mdotin)) * 1/(obj.scalein(Theta)*obj.K)^2 * obj.v;
+			% Outputs
+			obj.v	 =	obj.vhplut(hin, pin);
+			obj.pout =	pin - (mdotin*abs(mdotin)) * 1/((obj.valvechar(obj.scalein(Theta), obj.type) + thetaoffset)*obj.K)^2 * obj.v;
 
 			out		 = obj.pout;
-			vars	 = [obj.v, tempmdot, tempThetaK];
+			vars	 = [obj.v, tempmdot, tempThetaK, obj.thetareal];
 		end
 		
 		function v = vhplut(obj, h, p)
@@ -59,12 +65,25 @@ classdef valveModel < handle
 
 	methods (Access = private)
 		function out = scalein(obj, in)
-% 			m = 0.0461512;
-% 			c = 0;
-% 			fx = exp(m*in + c) - 1;
+			% Scales input
 			out = obj.THETA_MAX/obj.INPUT_SCALE_MAX * in;
-% 			out = obj.THETA_MAX/obj.INPUT_SCALE_MAX * fx;
+		end
 
+		function out = valvechar(obj, theta, type)
+			% Valve characteristic function.
+			switch type
+				case 'ep'
+					% Equal percentage
+					m = 0.0461512;
+					c = 0;
+					out = exp(m*theta + c) - 1;
+				case 'fo'
+					% Fast opening
+					out = 21.5+theta*(1/3);
+				case 'lin'
+					% Linear
+					out = theta;
+			end
 		end
 
 	end
