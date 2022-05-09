@@ -1,38 +1,10 @@
-clc;clear;close all;
-
-load('HiFi_model_data_for_component_tests_02.mat')
-
-
-% for figures
-b = 2;
-width = [700*b];
-height = [500*b];
-
-%%
-ref = CoolPropPyWrapper('HEOS::R134a');
-%% Constants for simulations
-% N_start = 10 % when mdot_COM1 is non zero..
-N = size(out.tout,1);
-% Beware of the sample time in simulink..
-t = out.tout;
-Ts_arr = [out.tout(2:N); out.tout(end)] - [0; out.tout(1:end-1)];
-
-% %%% visualisation of variable sample time
-% myfig(i)
-% subplot(211)
-% plot(t)
-% xlabel('Sample number')
-% ylabel('Time [s]')
-% title('Simulink time array')
-% subplot(212)
-% 
-% plot(Ts_arr)
-% xlabel('Sample number')
-% ylabel('Simulink time sample')
-
-
 %% TESTING compressorModelV2
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
+
 % Inputs for instantiation
 V_1_COM1   	= 33e-5;										% 50 cm^3 - found in krestens phd. New value is used to fit it to data.
 V_1_COM2   	= V_1_COM1/2;									% 2nd stage is half the first
@@ -82,6 +54,10 @@ sgtitle('Compressor flow comparison')
 
 %% TESTING pjjModel
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
 
 % Inputs for instantiations
 Mpjjinit = 0.015; % inital mass inside pjj
@@ -149,6 +125,10 @@ sgtitle('Pipe Joining Junction')
 
 %% TESTING condenserModel
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
 FAN_MAX = 1;			% max value of fan	
@@ -314,6 +294,10 @@ sgtitle('Condenser')
 
 %% TESTING condenser throttle valve model
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
 THETA_MAX = 1;			% max value of valves
@@ -424,6 +408,11 @@ sgtitle('Valve model')
 
 %% TESTING flash tank model
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
+
 % Constants
 
 
@@ -503,6 +492,10 @@ sgtitle('Flash Tank')
 
 %% Testing boxModel
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
 
 Tair	= getData('T_air',	'', out); % For init
 Tambi	= getData('Tamb',	'', out); % For init but also input
@@ -641,6 +634,11 @@ linkaxes([ax1 ax2 ax3], 'x')
 
 %% TESTING evaporatorModel
 % =========================================================================
+clc; clear; close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
+
+
 N_OP = 6000;
 
 % these inputs are taken to test whether our model and HifiModel agrees
@@ -657,10 +655,10 @@ Ufan_new	= transformControllerInput(Ufan, Ufan_t, t);
     	
 
 % output
-pout		= getData('evap_out_line', 'p',					out)*1e5;	
-hout		= getData('evap_out_line', 'h', out);
-Tsup		= getData('tsup', '',  out);
-
+p5			= getData('evap_out_line', 'p',	out)*1e5;						% pout				
+h7			= getData('evap_out_line', 'h', out);							% hout		
+Tsup		= getData('tsup', '',  out);									% Tsup
+sigma		= getData('Sigma', '', out);
 
 % Constants
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
@@ -672,7 +670,7 @@ Mvinit		= 1e-1;
 Tmlvinit	= Tv(N_OP) + 1.5; 
 Tmvinit		= Tv(N_OP) + 2; 
 mdotairinit = 0.1; 
-poutinit    = pout(N_OP-1);
+poutinit    = p5(N_OP-1);
 
 V_i_Eva		= 11.9*0.001;									% is 11.9 L  - L->m3 ; from simulink->14*1.8*6*(0.005^2)*pi; %nr_pipes*length*area
 Cp_air    	= 1003.5;										% heat capacity of air, google
@@ -685,16 +683,16 @@ M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
 Xe			= 0.1;																																								
 		
 % Instantiating object:
-evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
-			V_i_Eva, Xe, Cp_air, Cp_m, rho_air, UA_1, UA_2, UA_3, M_m_Eva, INPUT_SCALE_MAX, ...
-			FAN_MAX, poutinit, ref)
-
+evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit, ...
+			V_i_Eva, Cp_air, Cp_m, rho_air, UA_1, UA_2, UA_3, M_m_Eva, Xe, INPUT_SCALE_MAX, ...
+			FAN_MAX, ref)
 
 % Simulating
-evap_arr1 = zeros(N,29);
-evap_arr2 = zeros(N,3);
+evap_vars_arr = zeros(N,29);
+evap_outs_arr = zeros(N,3);
 for i=N_OP:N
-	[evap_arr1(i,:) evap_arr2(i,:)]= evap.simulate(h6(i), p4(i), mdot5(i), mdot1(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+	[evap_vars_arr(i,:) evap_outs_arr(i,:)]= evap.simulate(h6(i), p4(i), mdot5(i), mdot1(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+
 end
 
 % N_OP_stop = N_OP + 5
@@ -727,19 +725,19 @@ end
 
 myfig(8, [width height])
 ax1 = subplot(311)
-plot(t, evap_arr2(:,1))
+plot(t, evap_outs_arr(:,1))
 hold on
-plot(t, pout)
+plot(t, p5)
 legend('Evaporator output: pout', 'Krestens model')
 
 ax2 = subplot(312)
-plot(t, evap_arr2(:,2))
+plot(t, evap_outs_arr(:,2))
 hold on
-plot(t, hout)
+plot(t, h7)
 legend('Evaporator output: hout', 'Krestens model')
 
 ax3 = subplot(313)
-plot(t, evap_arr2(:,3))
+plot(t, evap_outs_arr(:,3))
 hold on
 plot(t, Tsup)
 legend('Evaporator output: Tsup', 'Krestens model')
@@ -747,18 +745,206 @@ legend('Evaporator output: Tsup', 'Krestens model')
 linkaxes([ax1 ax2 ax3], 'x')
 
 
+
+
+
+%% More thorough testing of evaporator.
+% clc; clear; 
+close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
+
+
+N_OP = 6000;
+N_OP_stop = 8000;
+% All these constants needs to be double checked. 
+Mlvinit		= [0.8257+0.1];		% ( 1e-3*11.8*0.8 ) / ref.VPX(1.85,0.1)  
+Mvinit		= [0.0219];		% 1e-3*11.8*0.2 /ref.VDewP(1.85)
+Tmlvinit 	= [Tv(N_OP) + 1.5];		
+Tmvinit		= [Tv(N_OP) + 2];	
+mdotairinit	= [0.1];	
+poutinit    = p5(N_OP-1);
+
+V_i_Eva		= 11.9*0.001;									% is 11.9 L  - L->m3 ; from simulink->14*1.8*6*(0.005^2)*pi; %nr_pipes*length*area
+Xe			= [0.1] %*[1.1 1 0.6];																																								
+Cp_air    	= 1003.5;										% heat capacity of air, google
+Cp_m		= 387;											% heat capacity of copper			
+rho_air		= 1.225;										% density of air
+UA_1      	= [3510] * [3/4 2/3];											% found in krestens phd
+UA_2      	= [1930] %*[2 1 0.5];											% found in krestens phd
+UA_3      	= [50];											% found in krestens phd
+M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
+
+
+	
+init_matrx = combvec(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit,  poutinit,...
+			V_i_Eva, Cp_air, Cp_m, rho_air, UA_1, UA_2, UA_3, M_m_Eva, Xe);
+
+c = mat2cell(init_matrx, [ones(1,15)], [ones(1,size(init_matrx,2))]);
+% Instantiating objects:
+
+s = struct();
+for i=1:size(init_matrx,2)
+	s.("evap_"+ i) = evaporatorModel(c{:,i}, ...
+			INPUT_SCALE_MAX, FAN_MAX, ref);
+end
+
+no_evaps = length(fieldnames(s))
+
+evap_vars_arr_debug = zeros(N,30,no_evaps);
+evap_outs_arr_debug = zeros(N,3, no_evaps);
+
+
+nam = fields(s);
+
+for ii=1:length(fieldnames(s))
+	for i=N_OP:N_OP_stop
+% 		['evap_', num2str(ii), '| sample no:', num2str(i)]
+		[evap_vars_arr_debug(i,:,ii) evap_outs_arr_debug(i,:,ii)]= s.(nam{ii,1}).simulate(h6(i), p4(i), mdot5(i), mdot1(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
+	end
+end
+
+% figure out which variables that deviates:
+needs_legend = [];
+props = properties(s.evap_1);
+for kk =1:15
+	if range(init_matrx(kk,:)) ~=0
+		needs_legend = [needs_legend, string(props{kk,1})];
+	else
+	end
+end
+
+legs = [""]
+for jj = 1:size(init_matrx,2)
+	legs(jj,1) = join([string(needs_legend(:))', '= [', s.(nam{jj,1}).(needs_legend(1))]);
+	for ii = 2:length(needs_legend)
+		legs(jj,1) = join([legs(jj,1),  s.(nam{jj,1}).(needs_legend(ii))]);
+	end
+	legs(jj,1) = join([legs(jj,1), ']']);
+end
+legs(jj+1,1) = "Krestens model";
+
+% =========================================================================
+% figure for debugging
+% =========================================================================
+
+myfig(9, [width height]);
+
+linew = 1
+
+ax1 = subplot(421)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_outs_arr_debug(:,1,l),'Linewidth', linew)
+	hold on
+end
+plot(t, p5)
+legend(legs)
+ylabel('Pressure [Pa]')
+
+ax2 = subplot(422)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_outs_arr_debug(:,2,l),'Linewidth', linew)
+	hold on
+end	
+plot(t, h7)
+legend(legs)
+ylabel('Enthalpy [J/kg]')
+
+ax3 = subplot(423)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_outs_arr_debug(:,3,l),'Linewidth', linew)
+	hold on
+end
+plot(t, Tsup)
+legend(legs)
+ylabel('Temperature [K]')
+
+ax4 = subplot(424)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,3,l),'Linewidth', linew)
+	hold on
+end
+plot(t, sigma)
+legend(legs)
+ylabel('Sigma []')
+
+ax5 = subplot(425)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,25:26,l),'Linewidth', linew)
+	hold on
+end
+legend(["M_{lv}: "; "M_v: "] + legs')
+ylabel('Mass []')
+
+ax6 = subplot(426)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,28:29,l),'Linewidth', linew)
+	hold on
+end
+plot(t,Tv)
+legg = ["T_{mlv}: "; "T_{mv}: "] + legs'
+legg = [legg(1:4), "T_v, Krestens model"]
+legend(legg)
+ylabel('Temperature [K]')
+
+ax7 = subplot(427)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,15,l),'Linewidth', linew)
+	hold on
+	plot(t, evap_vars_arr_debug(:,16,l),'Linewidth', linew)
+end
+legend(["mdotdew: "; "Q_mv: "] + legs')
+ylabel("Qmv and mdotdew")
+
+ax8 = subplot(428)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
+	hold on
+end
+plot(t,h6)
+legend(legs')
+ylabel('Dew point enthalpy [J/kg]')
+
+
+linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8], 'x');
+sgtitle('Evaporator outputs');
+
+
+
+
+%%
+
+
+myfig(10, [width height])
+ax1 = subplot(211) % plot masses
+
+plot(t, evap_vars_arr_debug(:,25:26,1) )
+legend('Mlv', 'Mv')
+
+ax2 = subplot(212) % plot masses
+plot(t, evap_vars_arr_debug(:,15,1) )
+hold on
+plot(t, mdot5)
+plot(t, mdot1)
+legend('mdotdew', 'mdot5: in', 'mdot1: out')
+linkaxes([ax1 ax2],'x')
+
+
+
+
+
 % %%% checking that the inputs make sense
 % myfig(81, [width height])
 % subplot(511)
-% plot(t, hin)
+% plot(t, h6)
 % hold on
-% plot(t, hout)
+% plot(t, h7)
 % legend('Input: hin', 'Output: hout')
 % 
 % subplot(512)
-% plot(t, pin)
+% plot(t, p4)
 % hold on
-% plot(t, pout)
+% plot(t, p5)
 % legend('Input: pin', 'Output: pout')
 % 
 % subplot(513)
@@ -771,9 +957,9 @@ linkaxes([ax1 ax2 ax3], 'x')
 % legend('Input: Tv: from evap_out_line', 'Input: Tret', 'Output: Tsup')
 % 
 % subplot(514)
-% plot(t, mdotin)
+% plot(t, mdot5)
 % hold on
-% plot(t, mdotout)
+% plot(t, mdot1)
 % legend('Input: mdotin', 'Input: mdotout')
 % 
 % subplot(515)

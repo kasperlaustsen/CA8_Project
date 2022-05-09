@@ -24,7 +24,7 @@ Astates = squeeze(Astates); % Remove a random third dimension..
 Atildestates = [gdata('tilde_x_m_dot_air', data), gdata('tilde_x_T_mlv', data), gdata('tilde_x_T_mv', data), ...
 gdata('tilde_x_M_mlv', data), gdata('tilde_x_T_air', data), gdata('tilde_x_T_box', data), ...
 gdata('tilde_x_T_cargo', data)];
-legTildeStates = ["tilde_mdot_{air}", "tilde_T_{mlv}", "tilde_T_{mv}", "tilde_M_{mlv}", "tilde_T_{air}", "tilde_T_{box}", "tilde_M_{mlv}"];
+legTildeStates = ["obs: mdot_{air}", "obs: T_{mlv}", "obs: T_{mv}", "obs: M_{mlv}", "obs: T_{air}", "obs: T_{box}", "obs: M_{mlv}"];
 
 f = [];
 
@@ -83,7 +83,7 @@ title('States')
 xlabel('Time [hours]')
 ylabel('State deviation (x - x_o)')
 xlim([0 1]) % In hours
-ylim([-2 2])
+ylim([-3 2])
 legend(legStates)
 
 ax2 = subplot(212);
@@ -92,7 +92,7 @@ title('Observed states from Kalman Decomposition observer')
 xlabel('Time [hours]')
 ylabel('State deviation (x - x_o)')
 xlim([0 1]) % In hours
-ylim([-2 2])
+ylim([-3 2])
 legend(legTildeStates)
 
 linkaxes([ax1 ax2],'x'); % Link x axes (not y)

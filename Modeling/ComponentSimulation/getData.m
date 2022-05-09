@@ -9,7 +9,7 @@ function data = getData(name, measurement, out)
 %				'evap_out_line'	'tret'	'tret_bf_fan'	'tsuc'	'tsup'	
 %				'ft_exv_out_line'	'ft_liq_out_line'	'ft_vap_out_line'	
 %				'Tamb'	''	''	'cpr_disc_line'	'meas_com1in'	
-%				'meas_com1out'	'meas_com2in' 'm_dot_air' 'T_air'
+%				'meas_com1out'	'meas_com2in' 'm_dot_air' 'T_air' 'Sigma'
 
 % Note: T_air and tret_bf_fan are the same.
 % 
@@ -35,6 +35,14 @@ function data = getData(name, measurement, out)
 		end
 	elseif size(out.logsout{i}.Values.Data,2) == 1
 		j = 1;
+	elseif size(out.logsout{i}.Values.Data,2) == 3 % for Sigma
+		j = 2;
 	end
-	data = out.logsout{i}.Values.Data(:,j);
+
+	datatemp = out.logsout{i}.Values.Data(:,j);
+	if range(datatemp) == 0
+		sprintf('Data is not collected. Perhabs name error')
+	else
+		data = datatemp;
+	end
 end

@@ -2,14 +2,15 @@ classdef evaporatorModel < handle
 	properties
 		% Constants
 		% --------------
-		Ts			% Simulation sampling time
+% 		Ts			% Simulation sampling time
 
 		Mlvinit		% [kg] Initial value of state
 		Mvinit		% [kg] 
 		Tmlvinit	% [K] 
 		Tmvinit		% [K] 
 		mdotairinit	% [kg/s] 
-		
+		poutinit	%
+
 		Vi			% [m3] Internal volume
 		Cpair		% [J/K] Heat capacity of air
 		Cpm			% [J/K] Heat capacity of metal
@@ -49,6 +50,8 @@ classdef evaporatorModel < handle
 		hlv			% [J/kg] Specific enthalpy of liquid-vapor CV
 		hdew		% [J/kg] LUT. From pressure before evaporator
 		mdotdew		% [kg/s] 
+	
+		warningflag % for PIlut
 
 		% Inputs
 		% --------------
@@ -85,9 +88,9 @@ classdef evaporatorModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, ...
-			Vi, Xe, Cpair, Cpm, rhoair, UA1, UA2, UA3, Mm, INPUT_SCALE_MAX, ...
-			FAN_MAX, poutinit, ref)
+		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit,...
+			Vi, Cpair, Cpm, rhoair, UA1, UA2, UA3, Mm, Xe, INPUT_SCALE_MAX, ...
+			FAN_MAX, ref)
 			obj.Mlvinit		= Mlvinit		;
 			obj.Mvinit		= Mvinit		;
 			obj.Tmlvinit	= Tmlvinit		;
@@ -98,7 +101,8 @@ classdef evaporatorModel < handle
 			obj.Tmlv		= Tmlvinit		;
 			obj.Tmv			= Tmvinit		;
 			obj.mdotair		= mdotairinit	;
-			
+			obj.poutinit	= poutinit		;
+
 			obj.Vi			= Vi			;
 			obj.Cpair		= Cpair			;
 			obj.Cpm			= Cpm			;
@@ -115,16 +119,18 @@ classdef evaporatorModel < handle
 
 			% initialising pout for Tlv
 			obj.pout		= poutinit		; 
+
+
+			obj.warningflag = 0;
 		end
 		% ---------------------------------
-
 
 		function [vars, out] = simulate(obj, hin, pin, mdotin, mdotout, Tv, Tret, Ufan, Ts)	
 			% Internal variables
 			obj.Tlv				= obj.Philut(hin, pin);
 		
 			obj.v1				= obj.Lambdalut(obj.pout, obj.Xe);
-			obj.sigma			= obj.Mlv * obj.v1 / obj.Vi;
+			obj.sigma			= min(obj.Mlv * obj.v1 / obj.Vi, 0.99);
 
 			% Fan shit
 			obj.Ustarp			= (obj.scalein(Ufan)*100-55.56)*0.0335;
@@ -147,9 +153,12 @@ classdef evaporatorModel < handle
 	
 			% pout
 			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
-			obj.hv				= obj.hdewlut(obj.pout) + obj.Qmv/obj.mdotdew; % possible divide by zero
+			obj.hdew			= obj.hdewlut(obj.pout);
+% 			obj.hdew			= obj.hdewlut(pin);
+			obj.hv				= obj.hdew + obj.Qmv/obj.mdotdew; % possible divide by zero
+% 			obj.hv				= obj.hdewlut(obj.pout) + obj.Qmv/obj.mdotdew; % possible divide by zero
 			obj.Vlv				= obj.sigma * obj.Vi;
-			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv));
+			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv), obj.pout);
 
 			% Update states
 			obj.Mlvdiriv		= mdotin - obj.mdotdew;
@@ -166,13 +175,12 @@ classdef evaporatorModel < handle
 
 			% Outputs
 			obj.Tsup = obj.Tretfan + (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair);
-			vars = [obj.Tlv, obj.v1, obj.sigma, obj.Ustarp, obj.Qfan, ...
-				obj.Ustarmdot, obj.Vbardotair, obj.mbardotair, ...
-				obj.Tretfan, obj.Qamv, obj.Tretsh, obj.Qamlv, ...
-				obj.Qmvmlv, obj.Qmlv, obj.mdotdew, obj.Qmv, obj.hv, ...
-				obj.Vlv, obj.pout, obj.Mlvdiriv, obj.Mvdiriv, ...
-				obj.mdotairdiriv, obj.Tmlvdiriv, obj.Tmvdiriv, obj.Mlv, ...
-				obj.Mv, obj.mdotair, obj.Tmlv, obj.Tmv];
+			vars = [	obj.Tlv,		obj.v1,				obj.sigma,		obj.Ustarp,			obj.Qfan, ...
+						obj.Ustarmdot,	obj.Vbardotair, 	obj.mbardotair, obj.Tretfan,		obj.Qamv, ...
+						obj.Tretsh,		obj.Qamlv, 			obj.Qmvmlv,		obj.Qmlv,			obj.mdotdew, ...
+						obj.Qmv,		obj.hv,				obj.Vlv,		obj.pout,			obj.Mlvdiriv, ...
+						obj.Mvdiriv, 	obj.mdotairdiriv,	obj.Tmlvdiriv,	obj.Tmvdiriv,		obj.Mlv, ...
+						obj.Mv,			obj.mdotair,		obj.Tmlv,		obj.Tmv,			obj.hdew];
 
 			out = [obj.pout, obj.hv, obj.Tsup];
 		end
@@ -190,9 +198,24 @@ classdef evaporatorModel < handle
 			hdew = obj.ref.HDewP(p*1e-5); % Pressure in bar
 		end
 
-		function p = PIlut(obj, h, D)
+		function p = PIlut(obj, h, D, p)
 			% Pressure from enthalyp and density
-			p = obj.ref.PHD(h, D);
+			
+			try
+				p = obj.ref.PHD(h, D);
+				if obj.warningflag == 1;
+					obj.warningflag =0;
+				end
+			catch
+				if obj.warningflag == 0
+					% include dewpoint density instead of previous pressure.
+% 					warning('PIlut couldnt execute. Previous value is assigned')
+					sprintf('PIlut couldnt execute. Previous value is assigned')
+					obj.warningflag = 1;
+					p = p;
+				end
+				
+			end
 		end
 
 		function out = scalein(obj, in)
