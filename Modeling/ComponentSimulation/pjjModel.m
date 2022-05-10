@@ -10,6 +10,7 @@ classdef pjjModel < handle
 % 		mdotout		% [kg/s] Output flow
 % 		hin1		% [J/kg] Input enthalpy
 % 		hin2		% [J/kg] Input enthalpy
+% 		pin			% [Pa] Input pressure
 
 %		Ts			% Sample time
 
@@ -17,6 +18,10 @@ classdef pjjModel < handle
 		% --------------
 		M			% [kg] Mass inside pjj
 		Mdiriv		% [kg] Mass time derivative
+
+		% "Internal" variables
+		%---------------
+		Tout		% [K] Output temperature
 
 		% Outputs
 		% --------------
@@ -35,7 +40,7 @@ classdef pjjModel < handle
 		end
 		% ---------------------------------
 
-		function out = simulate(obj, mdotin1, mdotin2, mdotout, hin1, hin2, Ts)
+		function [vars, out] = simulate(obj, mdotin1, mdotin2, mdotout, hin1, hin2, pin, Ts)
 			% Update states
 			obj.Mdiriv = mdotin1 + mdotin2 - mdotout;
 			obj.M = obj.M + obj.Mdiriv * Ts;
@@ -43,8 +48,18 @@ classdef pjjModel < handle
 			% Outputs
 % 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/(mdotin1 * mdotin2);
 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/mdotout;
+			obj.Tout = Philut(obj.hout, pin)
 
-			out = [obj.hout obj.M];
+			out = [obj.hout obj.T];
+			vars = [obj.M];
 		end
+	end
+
+	methods (Access = private)
+		
+		function T = Philut(obj, h, p)
+			T = obj.ref.THP(h, p*1e-5) + 273.15; % Pressure in bar
+		end
+
 	end
 end
