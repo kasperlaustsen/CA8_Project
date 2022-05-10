@@ -635,12 +635,12 @@ linkaxes([ax1 ax2 ax3], 'x')
 %% TESTING evaporatorModel
 % =========================================================================
 clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
+% ref = CoolPropPyWrapper('HEOS::R134a');
 testInit
-
-
 N_OP = 6000;
-
+% N_OP = 29556
+% N_OP_stop = N_OP + 100;
+N_OP_stop = N
 % these inputs are taken to test whether our model and HifiModel agrees
 h6			= getData('evap_exv_out_line', 'h', 	out);					% hin				
 p4			= getData('evap_exv_out_line', 'p', 	out)*1e5;				% pin				
@@ -688,9 +688,9 @@ evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit
 			FAN_MAX, ref)
 
 % Simulating
-evap_vars_arr = zeros(N,29);
+evap_vars_arr = zeros(N,30);
 evap_outs_arr = zeros(N,3);
-for i=N_OP:N
+for i=N_OP:N_OP_stop
 	[evap_vars_arr(i,:) evap_outs_arr(i,:)]= evap.simulate(h6(i), p4(i), mdot5(i), mdot1(i), Tv(i), Tret(i), Ufan_new(i), Ts_arr(i));
 
 end
@@ -750,28 +750,32 @@ linkaxes([ax1 ax2 ax3], 'x')
 
 %% More thorough testing of evaporator.
 % clc; clear; 
-close all;
-% ref = CoolPropPyWrapper('HEOS::R134a');
-% testInit
+% close all;
+ref = CoolPropPyWrapper('HEOS::R134a');
+testInit
 
 
 N_OP = 6000;
-N_OP_stop = 8000;
+% N_OP = 29556
+
+
+% N_OP_stop = N_OP + 20000
+N_OP_stop = N
 % All these constants needs to be double checked. 
 Mlvinit		= [0.8257+0.1];		% ( 1e-3*11.8*0.8 ) / ref.VPX(1.85,0.1)  
-Mvinit		= [0.0219];		% 1e-3*11.8*0.2 /ref.VDewP(1.85)
+Mvinit		= [0.0219 + 0.1];		% 1e-3*11.8*0.2 /ref.VDewP(1.85)
 Tmlvinit 	= [Tv(N_OP) + 1.5];		
 Tmvinit		= [Tv(N_OP) + 2];	
 mdotairinit	= [0.1];	
 poutinit    = p5(N_OP-1);
 
 V_i_Eva		= 11.9*0.001;									% is 11.9 L  - L->m3 ; from simulink->14*1.8*6*(0.005^2)*pi; %nr_pipes*length*area
-Xe			= [0.1] %*[1.1 1 0.6];																																								
+Xe			= [0.1]; %*[1.1 1 0.6];																																								
 Cp_air    	= 1003.5;										% heat capacity of air, google
 Cp_m		= 387;											% heat capacity of copper			
 rho_air		= 1.225;										% density of air
-UA_1      	= [3510] * [3/4 2/3];											% found in krestens phd
-UA_2      	= [1930] %*[2 1 0.5];											% found in krestens phd
+UA_1      	= [3510];  %  3/4];											% found in krestens phd
+UA_2      	= [1930]; %*[2 1 0.5];											% found in krestens phd
 UA_3      	= [50];											% found in krestens phd
 M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
 
@@ -815,7 +819,12 @@ for kk =1:15
 end
 
 legs = [""]
+
 for jj = 1:size(init_matrx,2)
+	if isempty(needs_legend)
+		legs(jj,1) = 'Non linear simulation model'
+		break
+	end
 	legs(jj,1) = join([string(needs_legend(:))', '= [', s.(nam{jj,1}).(needs_legend(1))]);
 	for ii = 2:length(needs_legend)
 		legs(jj,1) = join([legs(jj,1),  s.(nam{jj,1}).(needs_legend(ii))]);
@@ -828,11 +837,11 @@ legs(jj+1,1) = "Krestens model";
 % figure for debugging
 % =========================================================================
 
-myfig(9, [width height]);
+myfig(95, [width height]);
 
 linew = 1
 
-ax1 = subplot(421)
+ax1 = subplot(521)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_outs_arr_debug(:,1,l),'Linewidth', linew)
 	hold on
@@ -841,7 +850,7 @@ plot(t, p5)
 legend(legs)
 ylabel('Pressure [Pa]')
 
-ax2 = subplot(422)
+ax2 = subplot(522)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_outs_arr_debug(:,2,l),'Linewidth', linew)
 	hold on
@@ -850,7 +859,7 @@ plot(t, h7)
 legend(legs)
 ylabel('Enthalpy [J/kg]')
 
-ax3 = subplot(423)
+ax3 = subplot(523)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_outs_arr_debug(:,3,l),'Linewidth', linew)
 	hold on
@@ -859,7 +868,7 @@ plot(t, Tsup)
 legend(legs)
 ylabel('Temperature [K]')
 
-ax4 = subplot(424)
+ax4 = subplot(524)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,3,l),'Linewidth', linew)
 	hold on
@@ -868,7 +877,7 @@ plot(t, sigma)
 legend(legs)
 ylabel('Sigma []')
 
-ax5 = subplot(425)
+ax5 = subplot(525)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,25:26,l),'Linewidth', linew)
 	hold on
@@ -876,37 +885,56 @@ end
 legend(["M_{lv}: "; "M_v: "] + legs')
 ylabel('Mass []')
 
-ax6 = subplot(426)
+ax6 = subplot(526)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,28:29,l),'Linewidth', linew)
 	hold on
 end
 plot(t,Tv)
 legg = ["T_{mlv}: "; "T_{mv}: "] + legs'
-legg = [legg(1:4), "T_v, Krestens model"]
+legg = [legg(1:2), "T_v, Krestens model"]
 legend(legg)
 ylabel('Temperature [K]')
 
-ax7 = subplot(427)
+ax7 = subplot(527)
 for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,15,l),'Linewidth', linew)
+	plot(t, evap_vars_arr_debug(:,10,l),'Linewidth', linew)
 	hold on
+	plot(t, evap_vars_arr_debug(:,12,l),'Linewidth', linew)
+	plot(t, evap_vars_arr_debug(:,13,l),'Linewidth', linew)
+	plot(t, evap_vars_arr_debug(:,14,l),'Linewidth', linew)
 	plot(t, evap_vars_arr_debug(:,16,l),'Linewidth', linew)
 end
-legend(["mdotdew: "; "Q_mv: "] + legs')
+legend(["Q_{amv}: "; "Q_{amlv}: "; "Q_{mvmlv}: "; "Q_{mlv}: "; "Q_{mv}: "] + legs')
 ylabel("Qmv and mdotdew")
 
-ax8 = subplot(428)
+ax8 = subplot(528)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
 	hold on
 end
-plot(t,h6)
+% plot(t,h6)
 legend(legs')
 ylabel('Dew point enthalpy [J/kg]')
 
+ax9 = subplot(529)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,2,l),'Linewidth', linew)
+	hold on
+end
+legend(legs')
+ylabel('specific volume [J/kg]')
 
-linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8], 'x');
+ax10 = subplot(5,2,10)
+for l = 1:size(init_matrx,2)
+	plot(t, evap_vars_arr_debug(:,20:24,l),'Linewidth', linew)
+	hold on
+end
+legend(["Mlvdiriv"; "Mvdiriv";	"mdotairdiriv";	"Tmlvdiriv"; "Tmvdiriv"] + legs')
+ylabel('State derivatives []')
+
+
+linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8 ax9 ax10], 'x');
 sgtitle('Evaporator outputs');
 
 
@@ -916,18 +944,10 @@ sgtitle('Evaporator outputs');
 
 
 myfig(10, [width height])
-ax1 = subplot(211) % plot masses
+% ax1 = subplot(211) % plot masses
 
-plot(t, evap_vars_arr_debug(:,25:26,1) )
-legend('Mlv', 'Mv')
+plot(t, evap_vars_arr_debug(:,:,1) )
 
-ax2 = subplot(212) % plot masses
-plot(t, evap_vars_arr_debug(:,15,1) )
-hold on
-plot(t, mdot5)
-plot(t, mdot1)
-legend('mdotdew', 'mdot5: in', 'mdot1: out')
-linkaxes([ax1 ax2],'x')
 
 
 

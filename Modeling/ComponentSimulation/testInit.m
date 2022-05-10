@@ -1,7 +1,7 @@
 
 % load('HiFi_model_data_for_component_tests_02.mat')
-load('HiFi_model_data_for_component_tests_03.mat') % measurement file with sigma
-
+load('HiFi_model_data_for_component_tests_03.mat') % measurement file with sigma with max sample size = 1s
+% load('HiFi_model_data_for_component_tests_04.mat') % measurement file  with max sample size = 0.1s
 
 % for figures
 b = 2;

@@ -148,24 +148,22 @@ classdef evaporatorModel < handle
 			% Heat transfers
 			obj.Qmvmlv			= obj.UA3*(obj.Tmv - obj.Tmlv);
 			obj.Qmlv			= obj.UA1*(obj.Tmlv - obj.Tlv)*obj.sigma;
-			 		
-			obj.mdotdew 		= obj.Qmlv/(obj.hdewlut(obj.pout) - hin);
+			obj.hdew			= obj.hdewlut(obj.pout); 			 		
+			obj.mdotdew 		= obj.Qmlv/(obj.hdew - hin);
 	
 			% pout
 			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
-			obj.hdew			= obj.hdewlut(obj.pout);
-% 			obj.hdew			= obj.hdewlut(pin);
 			obj.hv				= obj.hdew + obj.Qmv/obj.mdotdew; % possible divide by zero
-% 			obj.hv				= obj.hdewlut(obj.pout) + obj.Qmv/obj.mdotdew; % possible divide by zero
 			obj.Vlv				= obj.sigma * obj.Vi;
-			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv), obj.pout);
+% 			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv), obj.pout);
+			obj.pout			= pin;
 
 			% Update states
 			obj.Mlvdiriv		= mdotin - obj.mdotdew;
 			obj.Mvdiriv			= obj.mdotdew - mdotout;
 			obj.mdotairdiriv	= (obj.mbardotair - obj.mdotair)/10;
 			obj.Tmlvdiriv		= (obj.Qamlv - obj.Qmlv + obj.Qmvmlv)/(obj.Mm*obj.sigma*obj.Cpm);
-			obj.Tmvdiriv		= (obj.Qamlv - obj.Qmv + obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpm);
+			obj.Tmvdiriv		= (obj.Qamv - obj.Qmv - obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpm);
 
 			obj.Mlv				= obj.Mlv 		+ obj.Mlvdiriv	* Ts;
 			obj.Mv				= obj.Mv 		+ obj.Mvdiriv		* Ts;
