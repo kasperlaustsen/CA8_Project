@@ -48,9 +48,9 @@ classdef pjjModel < handle
 			% Outputs
 % 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/(mdotin1 * mdotin2);
 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/mdotout;
-			obj.Tout = Philut(obj.hout, pin)
+			obj.Tout = Philut(obj.hout, pin);
 
-			out = [obj.hout obj.T];
+			out = [obj.hout obj.Tout];
 			vars = [obj.M];
 		end
 	end
