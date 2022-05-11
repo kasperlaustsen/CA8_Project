@@ -3,7 +3,7 @@ classdef pjjModel < handle
 		% Constants
 		% --------------
 		Minit		% Initial value of state
-
+		ref
 		% Inputs
 % 		mdotin1		% [kg/s] Input flow 1
 % 		mdotin2		% [kg/s] Input flow 2
@@ -33,10 +33,10 @@ classdef pjjModel < handle
 
 		% Constructor method
 		% ---------------------------------
-		function obj = pjjModel(Minit)
+		function obj = pjjModel(Minit,ref)
 			obj.Minit = Minit;	% Save in seperate variable for debugging
 			obj.M = Minit;		% 
-
+			obj.ref = ref;
 		end
 		% ---------------------------------
 
@@ -48,9 +48,9 @@ classdef pjjModel < handle
 			% Outputs
 % 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/(mdotin1 * mdotin2);
 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/mdotout;
-			obj.Tout = Philut(obj.hout, pin)
+			obj.Tout = obj.Philut(obj.hout, pin*1e-5);
 
-			out = [obj.hout obj.T];
+			out = [obj.hout obj.Tout];
 			vars = [obj.M];
 		end
 	end

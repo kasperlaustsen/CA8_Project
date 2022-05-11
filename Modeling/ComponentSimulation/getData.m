@@ -40,7 +40,7 @@ function data = getData(name, measurement, out)
 	end
 
 	datatemp = out.logsout{i}.Values.Data(:,j);
-	if range(datatemp) == 0
+	if range(datatemp) == 0 && datatemp(1) ==0
 		sprintf('Data is not collected. Perhabs name error')
 	else
 		data = datatemp;

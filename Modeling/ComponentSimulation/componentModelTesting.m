@@ -60,32 +60,37 @@ testInit
 
 
 % Inputs for instantiations
-Mpjjinit = 0.015; % inital mass inside pjj
+Mpjjinit = 0.024; % inital mass inside pjj
 
 % Instantiating object:
-pjj = pjjModel(Mpjjinit);
+pjj = pjjModel(Mpjjinit,ref);
 
 
 % these inputs are taken to test whether our model and HifiModel agrees
-mdot4 	= getData('ft_exv_out_line'	,'m',	out)		% flash tank flow			- mdotin1 					
-h5		= getData('ft_exv_out_line'	,'h',	out)		% enthalpy flash tank		- hin1				
+mdot4 	= getData('ft_exv_out_line'	,'m',	out);		% flash tank flow in		- mdotin1 					
+h5		= getData('ft_exv_out_line'	,'h',	out);		% enthalpy flash tank in	- hin1				
+p1		= getData('ft_exv_out_line'	,'p',	out)*1e5;		% pressure flash tank in	- pin
+T2		= getData('meas_com2in'		,'T',	out)+ 273.15; % t
+
+mdot1 	= getData('evap_out_line'	,'m',	out);		% compressor 1 flow			- mdotin2 	
+h1		= getData('meas_com1out'	,'h',	out);		% enthalpy compressor 1 out	- hin2					
 					
-mdot1 	= getData('evap_out_line'	,'m',	out)		% compressor 1 flow			- mdotin2 	
-h1		= getData('meas_com1out'	,'h',	out)		% enthalpy compressor 1 out	- hin2					
-					
-mdot2 	= getData('cpr_disc_line'	,'m',	out)		% compressor 2 flow			- mdotout 		
-h2		= getData('cpr_disc_line'	,'h',	out)		% compressor 2 enthalpy		- hout
+mdot2 	= getData('cpr_disc_line'	,'m',	out);	 	% compressor 2 flow			- mdotout 		
+h2		= getData('cpr_disc_line'	,'h',	out);		% compressor 2 enthalpy		- hout
+
+
 
 % Simulating
 pjj_arr = zeros(N,2);
-for i=1:N
-	pjj_arr(i,:) = pjj.simulate(mdot4(i), mdot1(i), mdot2(i), h5(i), h1(i), Ts_arr(i));					   
+pjj_vars_arr = zeros(N,1);
+for i=600:N
+	[pjj_vars_arr(i,:) pjj_arr(i,:)] = pjj.simulate(mdot4(i), mdot1(i), mdot2(i), h5(i), h1(i), p1(i), Ts_arr(i));					   
 end
 
 
 % Plotting
 myfig(3, [width height])
-subplot(211)
+subplot(311)
 plot(t,pjj_arr(:,1))
 hold on
 plot(t,h2)
@@ -95,8 +100,18 @@ title('Output comparison with Krestens simulation')
 xlabel('Time [s]')
 ylabel('Enthalpy [J/kg]')
 
-subplot(212)
+subplot(312)
 plot(t,pjj_arr(:,2))
+hold on
+plot(t,T2)
+
+legend('PJJ model', 'Temperature measurement, Krestens model')
+title('Output comparison with Krestens simulation')
+xlabel('Time [s]')
+ylabel('Enthalpy [J/kg]')
+
+subplot(313)
+plot(t,pjj_vars_arr(:,1))
 hold on
 xlabel('Time [s]')
 ylabel('Mass [kg]')
@@ -136,8 +151,8 @@ FAN_MAX = 1;			% max value of fan
 % Inputs for instantiations
 Mrinit		= 0.7;			% initial refrigerant mass inside condenser
 Tminit		= 273.15 + 30;	% initial metal temperature condenser
-UA_ma		= 650/3;		% found kresten PHD
-UA_rm		= 1500/1;		% found kresten PHD
+UA_ma		= 650/3;		% found kresten PHD: 650
+UA_rm		= 1500/1;		% found kresten PHD: 1500
 lambda		= 0.1;		% pressure drop constant, found in krestens sim model
 Cp_m		= 387;		% evaporator and condeser metal (copper), kresten approve
 M_m_Con		= 22.976;	% found in ??? (coefficient sheet?
@@ -635,7 +650,7 @@ linkaxes([ax1 ax2 ax3], 'x')
 %% TESTING evaporatorModel
 % =========================================================================
 clc; clear; close all;
-% ref = CoolPropPyWrapper('HEOS::R134a');
+ref = CoolPropPyWrapper('HEOS::R134a');
 testInit
 N_OP = 6000;
 % N_OP = 29556
@@ -683,7 +698,7 @@ M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
 Xe			= 0.1;																																								
 		
 % Instantiating object:
-evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit, ...
+evap = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit,  ...
 			V_i_Eva, Cp_air, Cp_m, rho_air, UA_1, UA_2, UA_3, M_m_Eva, Xe, INPUT_SCALE_MAX, ...
 			FAN_MAX, ref)
 
@@ -768,6 +783,7 @@ Tmlvinit 	= [Tv(N_OP) + 1.5];
 Tmvinit		= [Tv(N_OP) + 2];	
 mdotairinit	= [0.1];	
 poutinit    = p5(N_OP-1);
+Tvinit		= Tv(N_OP-1)-3;
 
 V_i_Eva		= 11.9*0.001;									% is 11.9 L  - L->m3 ; from simulink->14*1.8*6*(0.005^2)*pi; %nr_pipes*length*area
 Xe			= [0.1]; %*[1.1 1 0.6];																																								
@@ -781,10 +797,10 @@ M_m_Eva		= 30;											% [kg] found coeff sheet - evaporator metal mass
 
 
 	
-init_matrx = combvec(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit,  poutinit,...
+init_matrx = combvec(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit, Tvinit, ...
 			V_i_Eva, Cp_air, Cp_m, rho_air, UA_1, UA_2, UA_3, M_m_Eva, Xe);
 
-c = mat2cell(init_matrx, [ones(1,15)], [ones(1,size(init_matrx,2))]);
+c = mat2cell(init_matrx, [ones(1,16)], [ones(1,size(init_matrx,2))]);
 % Instantiating objects:
 
 s = struct();
@@ -795,7 +811,7 @@ end
 
 no_evaps = length(fieldnames(s))
 
-evap_vars_arr_debug = zeros(N,30,no_evaps);
+evap_vars_arr_debug = zeros(N,32,no_evaps);
 evap_outs_arr_debug = zeros(N,3, no_evaps);
 
 
@@ -889,10 +905,12 @@ ax6 = subplot(526)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,28:29,l),'Linewidth', linew)
 	hold on
+	plot(t, evap_vars_arr_debug(:,32,l),'Linewidth', linew)
+	hold on
 end
 plot(t,Tv)
-legg = ["T_{mlv}: "; "T_{mv}: "] + legs'
-legg = [legg(1:2), "T_v, Krestens model"]
+legg = ["T_{mlv}: "; "T_{mv}: "; "T_v: "] + legs'
+legg = [legg(1:3), "T_v, Krestens model"]
 legend(legg)
 ylabel('Temperature [K]')
 
@@ -912,6 +930,7 @@ ax8 = subplot(528)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
 	hold on
+% 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
 end
 % plot(t,h6)
 legend(legs')
@@ -929,8 +948,10 @@ ax10 = subplot(5,2,10)
 for l = 1:size(init_matrx,2)
 	plot(t, evap_vars_arr_debug(:,20:24,l),'Linewidth', linew)
 	hold on
+	plot(t, evap_vars_arr_debug(:,31,l),'Linewidth', linew)
+
 end
-legend(["Mlvdiriv"; "Mvdiriv";	"mdotairdiriv";	"Tmlvdiriv"; "Tmvdiriv"] + legs')
+legend(["Mlvdiriv"; "Mvdiriv";	"mdotairdiriv";	"Tmlvdiriv"; "Tmvdiriv"; "Tvdiriv"] + legs')
 ylabel('State derivatives []')
 
 

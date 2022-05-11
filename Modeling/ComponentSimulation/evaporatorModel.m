@@ -10,6 +10,7 @@ classdef evaporatorModel < handle
 		Tmvinit		% [K] 
 		mdotairinit	% [kg/s] 
 		poutinit	%
+		Tvinit
 
 		Vi			% [m3] Internal volume
 		Cpair		% [J/K] Heat capacity of air
@@ -75,6 +76,8 @@ classdef evaporatorModel < handle
 		Tmlvdiriv	% [K] 
 		Tmvdiriv	% [K] 
 		mdotairdiriv% [kg/s] 
+		Tv
+		Tvdiriv
 
 		% Outputs
 		% --------------
@@ -88,7 +91,7 @@ classdef evaporatorModel < handle
 	methods
 		% Constructor method
 		% ---------------------------------
-		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit,...
+		function obj = evaporatorModel(Mlvinit, Mvinit, Tmlvinit, Tmvinit, mdotairinit, poutinit, Tvinit, ...
 			Vi, Cpair, Cpm, rhoair, UA1, UA2, UA3, Mm, Xe, INPUT_SCALE_MAX, ...
 			FAN_MAX, ref)
 			obj.Mlvinit		= Mlvinit		;
@@ -102,6 +105,10 @@ classdef evaporatorModel < handle
 			obj.Tmv			= Tmvinit		;
 			obj.mdotair		= mdotairinit	;
 			obj.poutinit	= poutinit		;
+
+			% bonus state
+			obj.Tvinit		= Tvinit		;
+			obj.Tv			= Tvinit		;
 
 			obj.Vi			= Vi			;
 			obj.Cpair		= Cpair			;
@@ -128,7 +135,8 @@ classdef evaporatorModel < handle
 		function [vars, out] = simulate(obj, hin, pin, mdotin, mdotout, Tv, Tret, Ufan, Ts)	
 			% Internal variables
 			obj.Tlv				= obj.Philut(hin, pin);
-		
+			obj.pout			= pin;
+
 			obj.v1				= obj.Lambdalut(obj.pout, obj.Xe);
 			obj.sigma			= min(obj.Mlv * obj.v1 / obj.Vi, 0.99);
 
@@ -152,11 +160,11 @@ classdef evaporatorModel < handle
 			obj.mdotdew 		= obj.Qmlv/(obj.hdew - hin);
 	
 			% pout
-			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
+			obj.Qmv				= obj.UA2*(obj.Tmv - obj.Tv)*(1 - obj.sigma);
 			obj.hv				= obj.hdew + obj.Qmv/obj.mdotdew; % possible divide by zero
 			obj.Vlv				= obj.sigma * obj.Vi;
 % 			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv), obj.pout);
-			obj.pout			= pin;
+% 			obj.pout			= pin;
 
 			% Update states
 			obj.Mlvdiriv		= mdotin - obj.mdotdew;
@@ -166,19 +174,26 @@ classdef evaporatorModel < handle
 			obj.Tmvdiriv		= (obj.Qamv - obj.Qmv - obj.Qmvmlv)/(obj.Mm*(1 - obj.sigma)*obj.Cpm);
 
 			obj.Mlv				= obj.Mlv 		+ obj.Mlvdiriv	* Ts;
-			obj.Mv				= obj.Mv 		+ obj.Mvdiriv		* Ts;
+			obj.Mv				= obj.Mv 		+ obj.Mvdiriv	* Ts;
+			
+			% bonus state
+ 			obj.Tvdiriv			= (obj.Qmv + obj.mdotdew*obj.hdew - mdotout*obj.hv - obj.Mvdiriv*obj.hv) / (obj.Mv * obj.Jlut(obj.Tv));
+
+			obj.Tv				= obj.Tv		+ obj.Tvdiriv	* Ts;
+
 			obj.mdotair			= obj.mdotair	+ obj.mdotairdiriv * Ts;
 			obj.Tmlv			= obj.Tmlv		+ obj.Tmlvdiriv	* Ts;
 			obj.Tmv				= obj.Tmv 		+ obj.Tmvdiriv	* Ts;
 
 			% Outputs
-			obj.Tsup = obj.Tretfan + (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair);
+			obj.Tsup = obj.Tretfan - (obj.Qamlv + obj.Qamv)/(obj.Cpair*obj.mdotair);
 			vars = [	obj.Tlv,		obj.v1,				obj.sigma,		obj.Ustarp,			obj.Qfan, ...
 						obj.Ustarmdot,	obj.Vbardotair, 	obj.mbardotair, obj.Tretfan,		obj.Qamv, ...
 						obj.Tretsh,		obj.Qamlv, 			obj.Qmvmlv,		obj.Qmlv,			obj.mdotdew, ...
 						obj.Qmv,		obj.hv,				obj.Vlv,		obj.pout,			obj.Mlvdiriv, ...
 						obj.Mvdiriv, 	obj.mdotairdiriv,	obj.Tmlvdiriv,	obj.Tmvdiriv,		obj.Mlv, ...
-						obj.Mv,			obj.mdotair,		obj.Tmlv,		obj.Tmv,			obj.hdew];
+						obj.Mv,			obj.mdotair,		obj.Tmlv,		obj.Tmv,			obj.hdew ...
+						obj.Tvdiriv		obj.Tv];
 
 			out = [obj.pout, obj.hv, obj.Tsup];
 		end
@@ -190,6 +205,11 @@ classdef evaporatorModel < handle
 		function T = Philut(obj, h, p)
 			T = obj.ref.THP(h, p*1e-5) + 273.15; % Pressure in bar
 		end
+
+		function dhdT = Jlut(obj, Tv)
+			dhdT = ( obj.ref.HDewT(Tv-273.15) - obj.ref.HDewT(Tv -273.15 - 0.0001) ) / 0.0001;
+		end
+
 
 		function hdew = hdewlut(obj, p)
 			% Dew point enthalpy. Probably just from input pressure
