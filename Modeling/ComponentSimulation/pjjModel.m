@@ -33,6 +33,7 @@ classdef pjjModel < handle
 
 		% Constructor method
 		% ---------------------------------
+		function obj = pjjModel(Minit,ref)
 			obj.Minit = Minit;	% Save in seperate variable for debugging
 			obj.M = Minit;		% 
 			obj.ref = ref;
@@ -45,11 +46,8 @@ classdef pjjModel < handle
 			obj.M = obj.M + obj.Mdiriv * Ts;
 			
 			% Outputs
-% 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/(mdotin1 * mdotin2);
 			obj.hout = (hin1*mdotin1 + hin2*mdotin2)/mdotout;
-			obj.Tout = Philut(obj.hout, pin)
 			obj.Tout = obj.Philut(obj.hout, pin*1e-5);
-			obj.Tout = Philut(obj.hout, pin);
 
 			out = [obj.hout obj.Tout];
 			vars = [obj.M];
