@@ -109,7 +109,7 @@ classdef evaporatorModel < handle
 			% bonus state
 			obj.Tvinit		= Tvinit		;
 			obj.Tv			= Tvinit		;
-
+            obj.Tvdiriv     = 0             ;
 			obj.Vi			= Vi			;
 			obj.Cpair		= Cpair			;
 			obj.Cpm			= Cpm			;
@@ -160,7 +160,7 @@ classdef evaporatorModel < handle
 			obj.mdotdew 		= obj.Qmlv/(obj.hdew - hin);
 	
 			% pout
-			obj.Qmv				= obj.UA2*(obj.Tmv - obj.Tv)*(1 - obj.sigma);
+			obj.Qmv				= obj.UA2*(obj.Tmv - Tv)*(1 - obj.sigma);
 			obj.hv				= obj.hdew + obj.Qmv/obj.mdotdew; % possible divide by zero
 			obj.Vlv				= obj.sigma * obj.Vi;
 % 			obj.pout			= obj.PIlut(obj.hv, obj.Mv/(obj.Vi - obj.Vlv), obj.pout);
@@ -177,9 +177,9 @@ classdef evaporatorModel < handle
 			obj.Mv				= obj.Mv 		+ obj.Mvdiriv	* Ts;
 			
 			% bonus state
- 			obj.Tvdiriv			= (obj.Qmv + obj.mdotdew*obj.hdew - mdotout*obj.hv - obj.Mvdiriv*obj.hv) / (obj.Mv * obj.Jlut(obj.Tv));
+%  			obj.Tvdiriv			= (obj.Qmv + obj.mdotdew*obj.hdew - mdotout*obj.hv - obj.Mvdiriv*obj.hv) / (obj.Mv * obj.Jlut(obj.Tv));
 
-			obj.Tv				= obj.Tv		+ obj.Tvdiriv	* Ts;
+% 			obj.Tv				= obj.Tv		+ obj.Tvdiriv	* Ts;
 
 			obj.mdotair			= obj.mdotair	+ obj.mdotairdiriv * Ts;
 			obj.Tmlv			= obj.Tmlv		+ obj.Tmlvdiriv	* Ts;
