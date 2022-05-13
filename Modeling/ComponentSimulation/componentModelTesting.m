@@ -958,7 +958,39 @@ ylabel('State derivatives []')
 linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8 ax9 ax10], 'x');
 sgtitle('Evaporator outputs');
 
+%%
 
+
+% Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
+Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
+H_ss = evap_outs_arr_debug(end,2);
+
+
+p5_test = evap_outs_arr_debug(:,1)*1e-5;
+p_ss = p5_test(end);
+delta_X = 100000;  
+
+linearOffset_Tv = ref.THP(H_ss, p_ss);                        % Calculate f(p0) and f'(p0)
+linearSlope_Tv_p = (ref.THP(H_ss, p_ss+delta_X) - ...
+	              ref.THP(H_ss, p_ss-delta_X) ) / (2*delta_X);
+
+linearSlope_Tv_h = (ref.THP(H_ss+delta_X, p_ss) - ...
+	              ref.THP(H_ss-delta_X, p_ss) ) / (2*delta_X);
+
+
+% Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (h7 - H_ss);
+Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (evap_vars_arr_debug(:,17) - H_ss);
+
+
+figure()
+plot(Tv_lookup,'b')
+hold on
+plot(Tv-273.15,'r')
+plot(Tv_linear,'g')
+legend(["Model lookup Tv" "Kresten Tv" "Model lineariseret Tv"])
+
+
+dewpointT = ref.TDewP(evap_outs_arr_debug(end,1)*1e-5);
 
 
 %%

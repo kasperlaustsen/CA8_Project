@@ -39,6 +39,7 @@ syms sigma v_Eva V_i_Eva T_retfan T_ret Q_fan_2 m_dot_air Cp_air T_retsh
 syms U_fan_2 U_star_P U_star_m_dot 
 syms V_dot_bar_air rho_air UA_1 UA_2 UA_3 T_lv Pi V_lv h_lv h_dew m_dot_dew 
 syms T_sup M_m_Eva m_bar_dot_air
+syms T_superheat
 
 % box
 syms T_air Q_ca Q_ba Q_cool M_air 
