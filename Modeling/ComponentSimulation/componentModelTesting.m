@@ -3,7 +3,7 @@
 clc; clear; close all;
 ref = CoolPropPyWrapper('HEOS::R134a');
 testInit
-
+width = 800; height = 300;
 
 % Inputs for instantiation
 V_1_COM1   	= 33e-5;										% 50 cm^3 - found in krestens phd. New value is used to fit it to data.
@@ -38,9 +38,9 @@ for i=1:N
 	comp1V2out_arr(i,:) = comp1V2.simulate(p5(i), p1(i), T7(i), omega_new(i));
 end
 
-
+figs = []
 % Plotting
-myfig(2, [width height])
+figs = [myfig(2, [width height]) figs]
 % subplot(211)
 plot(t,comp1V2out_arr(:,1))
 hold on
@@ -49,14 +49,15 @@ legend('compModel', 'Krestens model')
 % title('Compressor flow comparison')
 xlabel('Time [s]')
 ylabel('Mass flow [kg/s]')
-sgtitle('Compressor flow comparison')
+sgtitle('Compressor')
 
 
 %% TESTING pjjModel
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
+
 
 
 % Inputs for instantiations
@@ -87,9 +88,10 @@ for i=600:N
 	[pjj_vars_arr(i,:) pjj_arr(i,:)] = pjj.simulate(mdot4(i), mdot1(i), mdot2(i), h5(i), h1(i), p1(i), Ts_arr(i));					   
 end
 
+width = 800; height = 600;
 
 % Plotting
-myfig(3, [width height])
+figs = [myfig(3, [width height]) figs]
 subplot(311)
 plot(t,pjj_arr(:,1))
 hold on
@@ -140,9 +142,9 @@ sgtitle('Pipe Joining Junction')
 
 %% TESTING condenserModel
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
 
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
@@ -196,10 +198,13 @@ yl2 = [0 0.15];
 yl3 = 1e5*[7 10.5];
 yl4 = [55 105];
 
+
+width = 800; height = 600;
+
 % Plotting 1
 % ----------------------
-myfig(41, [width height]);
-subplot(411)
+figs = [myfig(41, [width height]) figs]
+subplot(311)
 plot(tp,h4(Nstart:end))
 hold on
 plot(tp, condout_arr(:,1))
@@ -209,7 +214,7 @@ xlabel('Time [s]')
 ylabel('Enthalpy [J/kg]')
 ylim(yl1)
 
-subplot(412)
+subplot(312)
 plot(tp,mdot3(Nstart:end))
 hold on
 plot(tp, condout_arr(:,2))
@@ -218,7 +223,7 @@ xlabel('Time [s]')
 ylabel('Mass flow [kg/s]')
 ylim(yl2)
 
-subplot(413)
+subplot(313)
 plot(tp,p2(Nstart:end))
 hold on
 plot(tp, condout_arr(:,3))
@@ -228,13 +233,13 @@ xlabel('Time [s]')
 ylabel('Pressure [Pa]')
 ylim(yl3)
 
-subplot(414)
-plot(tp, U_fan_new(Nstart:end))
-% ylim([-4e5 4e5])
-legend('Ufan')
-xlabel('Time [s]')
-ylabel('Fan speed [%]')
-ylim(yl4)
+% subplot(414)
+% plot(tp, U_fan_new(Nstart:end))
+% % ylim([-4e5 4e5])
+% legend('Ufan')
+% xlabel('Time [s]')
+% ylabel('Fan speed [%]')
+% ylim(yl4)
 sgtitle('Condenser')
 
 
@@ -309,9 +314,9 @@ sgtitle('Condenser')
 
 %% TESTING condenser throttle valve model
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
 
 
 INPUT_SCALE_MAX = 100;	% Inputs are scaled between 0 and this value
@@ -351,11 +356,12 @@ for i=1:N
 	[var_arr(i,:), out_arr(i)] = val.simulate(p3(i), h4(i), mdot3(i), Theta_new(i));
 end
 
+
+width = 800; height = 300;
 yl1 = 1e5*[3.5 10]
-myfig(5, [width height])
 
-
-ax2 = subplot(411)
+figs = [myfig(5, [width height]) figs]
+% ax2 = subplot(411)
 plot(t,p3)
 hold on
 plot(t,p1)
@@ -364,36 +370,37 @@ ylim(yl1)
 legend('pin','pout', 'Linear valveModel pout')
 xlabel('Time [s]')
 ylabel('Pressure [Pa]')
-title('$P_{out} = p_{in} - \dot{m}^2 \cdot v \cdot \frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
-
-ax3 = subplot(412)
-plot(t,var_arr(:,3))
-% plot(t,var_arr)
-% legend('v (specific volume)', 'mdotsq', '1/ThetaK', 'Theta')
-legend('$\frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
-xlabel('Time [s]')
-ylabel('[]')
-
-ax4 = subplot(413)
-% plot(t,hin)
-% legend('hin')
-stairs(t,var_arr(:,2))
-legend('$\dot{m}^2$','interpreter','latex')
-xlabel('Time [s]')
-ylabel('Mass flow squared [kg^2/s^2]')
-
-ax5 = subplot(414)
-plot(t, var_arr(:,1))
-legend('$v$','interpreter','latex')
-xlabel('Time [s]')
-ylabel('Specific Volume [m^3/kg]')
-% stairs(t,Theta_new)
-% hold on
-% stairs(t, var_arr(:,4))
-% legend('Theta', 'Theta after opening degree')
-
-linkaxes([ax2 ax3 ax4 ax5],'x')
-sgtitle('Valve model')
+sgtitle('Valve')
+% title('$P_{out} = p_{in} - \dot{m}^2 \cdot v \cdot \frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
+% 
+% ax3 = subplot(412)
+% plot(t,var_arr(:,3))
+% % plot(t,var_arr)
+% % legend('v (specific volume)', 'mdotsq', '1/ThetaK', 'Theta')
+% legend('$\frac{1}{(f(\Theta)K)^2}$','interpreter','latex')
+% xlabel('Time [s]')
+% ylabel('[]')
+% 
+% ax4 = subplot(413)
+% % plot(t,hin)
+% % legend('hin')
+% stairs(t,var_arr(:,2))
+% legend('$\dot{m}^2$','interpreter','latex')
+% xlabel('Time [s]')
+% ylabel('Mass flow squared [kg^2/s^2]')
+% 
+% ax5 = subplot(414)
+% plot(t, var_arr(:,1))
+% legend('$v$','interpreter','latex')
+% xlabel('Time [s]')
+% ylabel('Specific Volume [m^3/kg]')
+% % stairs(t,Theta_new)
+% % hold on
+% % stairs(t, var_arr(:,4))
+% % legend('Theta', 'Theta after opening degree')
+% 
+% linkaxes([ax2 ax3 ax4 ax5],'x')
+% sgtitle('Valve model')
 
 
 
@@ -423,9 +430,9 @@ sgtitle('Valve model')
 
 %% TESTING flash tank model
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
 
 
 % Constants
@@ -451,8 +458,11 @@ for i=1:N
 	ft_arr(i,:) = ft.simulate(p1(i), h4(i), mdot3(i));
 end
 
+width = 800; height = 600;
 
-myfig(6, [width height])
+figs = [myfig(6, [width height]) figs]
+
+% myfig(6, [width height])
 subplot(411)
 plot(t, ft_arr(:,1))
 hold on
@@ -507,9 +517,9 @@ sgtitle('Flash Tank')
 
 %% Testing boxModel
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
 
 
 Tair	= getData('T_air',	'', out); % For init
@@ -584,8 +594,11 @@ end
 % list of inputs: mdotair, Tsup, Tambi, Ufan2
 % list of outputs: Tret
 
+
+width = 800; height = 600;
 % Comparison plots
-myfig(71, [width height])
+figs = [myfig(71, [width height]) figs]
+% myfig(71, [width height])
 ax1 = subplot(211)
 plot(t, boxout_arr(:))
 hold on
@@ -593,7 +606,7 @@ plot(t, Tair(:))
 legend('model output: Tret/Tair', 'Krestens model: Tair/tret_bf_fan')
 xlabel('Time [s]')
 ylabel('Temperature [C]')
-title('Comparison of our model air temperature vs. Krestens model air temperature')
+title('boxModel air temperature vs. HiFi model air temperature')
 
 ax2 = subplot(212)
 plot(t, boxvars_arr(:,11))
@@ -602,42 +615,42 @@ plot(t, Tcargo(:))
 legend('model output: Tcargo', 'Krestens model: tcargo')
 xlabel('Time [s]')
 ylabel(' []')
-title('Comparison of our model cargo temperature vs. Krestens model cargo temperature')
+title('boxModel cargo temperature vs. HiFi model cargo temperature')
 
 linkaxes([ax1 ax2], 'x')
-
+sgtitle('Box ')
 % All variables plotted
 % Indexes for heat flows and temperatues
 Q_idx = [2,3,4,5,6];
 T_idx = [7,9,11];
 Tderiv_idx = [8, 10, 12]
 
-myfig(72, [width height]);
-ax1 = subplot(311);
-plot(t, boxvars_arr(:,Q_idx))
-legend('Qfan2', 'Qcool', 'Qamb', 'Qca', 'Qba')
-xlabel('Time [s]')
-ylabel('Heat flow [W]')
-title('Heat flows of box')
-
-ax2 = subplot(312);
-plot(t, (boxvars_arr(:,T_idx) - 273.15)) % NOTE!: K -> C 
-% hold on
+% myfig(72, [width height]);
+% ax1 = subplot(311);
+% plot(t, boxvars_arr(:,Q_idx))
+% legend('Qfan2', 'Qcool', 'Qamb', 'Qca', 'Qba')
+% xlabel('Time [s]')
+% ylabel('Heat flow [W]')
+% title('Heat flows of box')
+% 
+% ax2 = subplot(312);
+% plot(t, (boxvars_arr(:,T_idx) - 273.15)) % NOTE!: K -> C 
+% % hold on
+% % plot(t, boxvars_arr(:,Tderiv_idx)) % NOTE!: NOT K -> C
+% % legend('Tair', 'Tbox', 'Tcargo', 'Tairderiv',' Tboxderiv', 'Tcargoderiv')
+% legend('Tair', 'Tbox', 'Tcargo')
+% xlabel('Time [s]')
+% ylabel('Temperature [C]')
+% title('States: Temperatures')
+% 
+% ax3 = subplot(313);
 % plot(t, boxvars_arr(:,Tderiv_idx)) % NOTE!: NOT K -> C
-% legend('Tair', 'Tbox', 'Tcargo', 'Tairderiv',' Tboxderiv', 'Tcargoderiv')
-legend('Tair', 'Tbox', 'Tcargo')
-xlabel('Time [s]')
-ylabel('Temperature [C]')
-title('States: Temperatures')
-
-ax3 = subplot(313);
-plot(t, boxvars_arr(:,Tderiv_idx)) % NOTE!: NOT K -> C
-legend('Tairderiv',' Tboxderiv', 'Tcargoderiv')
-xlabel('Time [s]')
-ylabel('Temperature [C]')
-title('State derivatives: Temperatures')
-
-linkaxes([ax1 ax2 ax3], 'x')
+% legend('Tairderiv',' Tboxderiv', 'Tcargoderiv')
+% xlabel('Time [s]')
+% ylabel('Temperature [C]')
+% title('State derivatives: Temperatures')
+% 
+% linkaxes([ax1 ax2 ax3], 'x')
 
 
 
@@ -649,9 +662,9 @@ linkaxes([ax1 ax2 ax3], 'x')
 
 %% TESTING evaporatorModel
 % =========================================================================
-clc; clear; close all;
-ref = CoolPropPyWrapper('HEOS::R134a');
-testInit
+% clc; clear; close all;
+% ref = CoolPropPyWrapper('HEOS::R134a');
+% testInit
 N_OP = 6000;
 % N_OP = 29556
 % N_OP_stop = N_OP + 100;
@@ -737,8 +750,8 @@ end
 % legend(legs)
 
 
-
-myfig(8, [width height])
+figs = [myfig(8, [width height]) figs]
+% myfig(8, [width height])
 ax1 = subplot(311)
 plot(t, evap_outs_arr(:,1))
 hold on
@@ -758,7 +771,7 @@ plot(t, Tsup)
 legend('Evaporator output: Tsup', 'Krestens model')
 
 linkaxes([ax1 ax2 ax3], 'x')
-
+sgtitle('Evaporator')
 
 
 
@@ -849,159 +862,184 @@ for jj = 1:size(init_matrx,2)
 end
 legs(jj+1,1) = "Krestens model";
 
-% =========================================================================
-% figure for debugging
-% =========================================================================
-
-myfig(95, [width height]);
-
-linew = 1
-
-ax1 = subplot(521)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_outs_arr_debug(:,1,l),'Linewidth', linew)
-	hold on
-end
-plot(t, p5)
-legend(legs)
-ylabel('Pressure [Pa]')
-
-ax2 = subplot(522)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_outs_arr_debug(:,2,l),'Linewidth', linew)
-	hold on
-end	
-plot(t, h7)
-legend(legs)
-ylabel('Enthalpy [J/kg]')
-
-ax3 = subplot(523)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_outs_arr_debug(:,3,l),'Linewidth', linew)
-	hold on
-end
-plot(t, Tsup)
-legend(legs)
-ylabel('Temperature [K]')
-
-ax4 = subplot(524)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,3,l),'Linewidth', linew)
-	hold on
-end
-plot(t, sigma)
-legend(legs)
-ylabel('Sigma []')
-
-ax5 = subplot(525)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,25:26,l),'Linewidth', linew)
-	hold on
-end
-legend(["M_{lv}: "; "M_v: "] + legs')
-ylabel('Mass []')
-
-ax6 = subplot(526)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,28:29,l),'Linewidth', linew)
-	hold on
-	plot(t, evap_vars_arr_debug(:,32,l),'Linewidth', linew)
-	hold on
-end
-plot(t,Tv)
-legg = ["T_{mlv}: "; "T_{mv}: "; "T_v: "] + legs'
-legg = [legg(1:3), "T_v, Krestens model"]
-legend(legg)
-ylabel('Temperature [K]')
-
-ax7 = subplot(527)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,10,l),'Linewidth', linew)
-	hold on
-	plot(t, evap_vars_arr_debug(:,12,l),'Linewidth', linew)
-	plot(t, evap_vars_arr_debug(:,13,l),'Linewidth', linew)
-	plot(t, evap_vars_arr_debug(:,14,l),'Linewidth', linew)
-	plot(t, evap_vars_arr_debug(:,16,l),'Linewidth', linew)
-end
-legend(["Q_{amv}: "; "Q_{amlv}: "; "Q_{mvmlv}: "; "Q_{mlv}: "; "Q_{mv}: "] + legs')
-ylabel("Qmv and mdotdew")
-
-ax8 = subplot(528)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
-	hold on
-% 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
-end
-% plot(t,h6)
-legend(legs')
-ylabel('Dew point enthalpy [J/kg]')
-
-ax9 = subplot(529)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,2,l),'Linewidth', linew)
-	hold on
-end
-legend(legs')
-ylabel('specific volume [J/kg]')
-
-ax10 = subplot(5,2,10)
-for l = 1:size(init_matrx,2)
-	plot(t, evap_vars_arr_debug(:,20:24,l),'Linewidth', linew)
-	hold on
-	plot(t, evap_vars_arr_debug(:,31,l),'Linewidth', linew)
-
-end
-legend(["Mlvdiriv"; "Mvdiriv";	"mdotairdiriv";	"Tmlvdiriv"; "Tmvdiriv"; "Tvdiriv"] + legs')
-ylabel('State derivatives []')
-
-
-linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8 ax9 ax10], 'x');
-sgtitle('Evaporator outputs');
-
-%%
+% % % =========================================================================
+% % % figure for debugging
+% % % =========================================================================
+% % 
+% % myfig(95, [width height]);
+% % 
+% % linew = 1
+% % 
+% % ax1 = subplot(521)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_outs_arr_debug(:,1,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % plot(t, p5)
+% % legend(legs)
+% % ylabel('Pressure [Pa]')
+% % 
+% % ax2 = subplot(522)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_outs_arr_debug(:,2,l),'Linewidth', linew)
+% % 	hold on
+% % end	
+% % plot(t, h7)
+% % legend(legs)
+% % ylabel('Enthalpy [J/kg]')
+% % 
+% % ax3 = subplot(523)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_outs_arr_debug(:,3,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % plot(t, Tsup)
+% % legend(legs)
+% % ylabel('Temperature [K]')
+% % 
+% % ax4 = subplot(524)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,3,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % plot(t, sigma)
+% % legend(legs)
+% % ylabel('Sigma []')
+% % 
+% % ax5 = subplot(525)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,25:26,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % legend(["M_{lv}: "; "M_v: "] + legs')
+% % ylabel('Mass []')
+% % 
+% % ax6 = subplot(526)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,28:29,l),'Linewidth', linew)
+% % 	hold on
+% % 	plot(t, evap_vars_arr_debug(:,32,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % plot(t,Tv)
+% % legg = ["T_{mlv}: "; "T_{mv}: "; "T_v: "] + legs'
+% % legg = [legg(1:3), "T_v, Krestens model"]
+% % legend(legg)
+% % ylabel('Temperature [K]')
+% % 
+% % ax7 = subplot(527)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,10,l),'Linewidth', linew)
+% % 	hold on
+% % 	plot(t, evap_vars_arr_debug(:,12,l),'Linewidth', linew)
+% % 	plot(t, evap_vars_arr_debug(:,13,l),'Linewidth', linew)
+% % 	plot(t, evap_vars_arr_debug(:,14,l),'Linewidth', linew)
+% % 	plot(t, evap_vars_arr_debug(:,16,l),'Linewidth', linew)
+% % end
+% % legend(["Q_{amv}: "; "Q_{amlv}: "; "Q_{mvmlv}: "; "Q_{mlv}: "; "Q_{mv}: "] + legs')
+% % ylabel("Qmv and mdotdew")
+% % 
+% % ax8 = subplot(528)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
+% % 	hold on
+% % % 	plot(t, evap_vars_arr_debug(:,30,l),'Linewidth', linew)
+% % end
+% % % plot(t,h6)
+% % legend(legs')
+% % ylabel('Dew point enthalpy [J/kg]')
+% % 
+% % ax9 = subplot(529)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,2,l),'Linewidth', linew)
+% % 	hold on
+% % end
+% % legend(legs')
+% % ylabel('specific volume [J/kg]')
+% % 
+% % ax10 = subplot(5,2,10)
+% % for l = 1:size(init_matrx,2)
+% % 	plot(t, evap_vars_arr_debug(:,20:24,l),'Linewidth', linew)
+% % 	hold on
+% % 	plot(t, evap_vars_arr_debug(:,31,l),'Linewidth', linew)
+% % 
+% % end
+% % legend(["Mlvdiriv"; "Mvdiriv";	"mdotairdiriv";	"Tmlvdiriv"; "Tmvdiriv"; "Tvdiriv"] + legs')
+% % ylabel('State derivatives []')
+% % 
+% % 
+% % linkaxes([ax1 ax2 ax3 ax4 ax5 ax6 ax7 ax8 ax9 ax10], 'x');
+% % sgtitle('Evaporator outputs');
 
 
-% Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
-Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
-H_ss = evap_outs_arr_debug(end,2);
 
 
-p5_test = evap_outs_arr_debug(:,1)*1e-5;
-p_ss = p5_test(end);
-delta_X = 100000;  
+width = 800; height =600;
 
-linearOffset_Tv = ref.THP(H_ss, p_ss);                        % Calculate f(p0) and f'(p0)
-linearSlope_Tv_p = (ref.THP(H_ss, p_ss+delta_X) - ...
-	              ref.THP(H_ss, p_ss-delta_X) ) / (2*delta_X);
-
-linearSlope_Tv_h = (ref.THP(H_ss+delta_X, p_ss) - ...
-	              ref.THP(H_ss-delta_X, p_ss) ) / (2*delta_X);
-
-
-% Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (h7 - H_ss);
-Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (evap_vars_arr_debug(:,17) - H_ss);
-
-
-figure()
-plot(Tv_lookup,'b')
+figs = [myfig(81, [width height]) figs]
+% myfig(8, [width height])
+ax1 = subplot(311)
+plot(t, evap_outs_arr_debug(:,1,1))
 hold on
-plot(Tv-273.15,'r')
-plot(Tv_linear,'g')
-legend(["Model lookup Tv" "Kresten Tv" "Model lineariseret Tv"])
+plot(t, p5)
+legend('Evaporator output: pout', 'Krestens model')
 
+ax2 = subplot(312)
+plot(t, evap_outs_arr_debug(:,2,1))
+hold on
+plot(t, h7)
+legend('Evaporator output: hout', 'Krestens model')
 
-dewpointT = ref.TDewP(evap_outs_arr_debug(end,1)*1e-5);
+ax3 = subplot(313)
+plot(t, evap_outs_arr_debug(:,3,1))
+hold on
+plot(t, Tsup)
+legend('Evaporator output: Tsup', 'Krestens model')
+
+linkaxes([ax1 ax2 ax3], 'x')
+sgtitle('Evaporator')
+%%
+% % Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
+% Tv_lookup = ref.THP(evap_outs_arr_debug(:,2),evap_outs_arr_debug(:,1)*1e-5);
+% H_ss = evap_outs_arr_debug(end,2);
+% 
+% 
+% p5_test = evap_outs_arr_debug(:,1)*1e-5;
+% p_ss = p5_test(end);
+% delta_X = 100000;  
+% 
+% linearOffset_Tv = ref.THP(H_ss, p_ss);                        % Calculate f(p0) and f'(p0)
+% linearSlope_Tv_p = (ref.THP(H_ss, p_ss+delta_X) - ...
+% 	              ref.THP(H_ss, p_ss-delta_X) ) / (2*delta_X);
+% 
+% linearSlope_Tv_h = (ref.THP(H_ss+delta_X, p_ss) - ...
+% 	              ref.THP(H_ss-delta_X, p_ss) ) / (2*delta_X);
+% 
+% 
+% % Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (h7 - H_ss);
+% Tv_linear = linearOffset_Tv + linearSlope_Tv_p * (p5*1e-5 - p_ss) + linearSlope_Tv_h * (evap_vars_arr_debug(:,17) - H_ss);
+% 
+% 
+% figure()
+% plot(Tv_lookup,'b')
+% hold on
+% plot(Tv-273.15,'r')
+% plot(Tv_linear,'g')
+% legend(["Model lookup Tv" "Kresten Tv" "Model lineariseret Tv"])
+% 
+% 
+% dewpointT = ref.TDewP(evap_outs_arr_debug(end,1)*1e-5);
 
 
 %%
 
-
-myfig(10, [width height])
-% ax1 = subplot(211) % plot masses
-
-plot(t, evap_vars_arr_debug(:,:,1) )
-
-
+% 
+% myfig(10, [width height])
+% % ax1 = subplot(211) % plot masses
+% 
+% plot(t, evap_vars_arr_debug(:,:,1) )
+% 
+% 
 
 
 
@@ -1040,3 +1078,8 @@ plot(t, evap_vars_arr_debug(:,:,1) )
 % hold on
 % stairs(t, Ufan_new)
 % legend('Input: Ufan', 'Input: Ufan_new')
+
+%% exporting
+saveDir = "C:\Users\kaspe\Documents\Git\Repos\CA8_Writings\Graphics"
+filenames = ["comp_test_com.png","comp_test_pjj.png","comp_test_con.png","comp_test_val.png","comp_test_ft.png","comp_test_box.png","comp_test_eva.png"]
+myfigexport(saveDir,figs,filenames,"false",'',500)
