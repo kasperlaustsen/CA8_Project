@@ -44,7 +44,7 @@ plot(tHour, Astates)
 title('States')
 xlabel('Time [hours]')
 ylabel('State deviation $(x - x_o)$')
-legend(legStates)
+legend(legStates, 'Location', 'southeast')
 
 
 ax2 = subplot(212);
@@ -52,7 +52,7 @@ plot(tHour, Ainputs')
 title('Inputs')
 xlabel('Time [hours]')
 ylabel('Input deviation $(u - u_o)$')
-legend(legInput)
+legend(legInput, 'Location', 'southeast')
 
 linkaxes([ax1 ax2],'x'); % Link x axes (not y)
 
@@ -67,7 +67,7 @@ title('States')
 xlabel('Time [hours]')
 ylabel('State deviation $(x - x_o)$')
 xlim([0 1]) % In hours
-legend(legStates)
+legend(legStates, 'Location', 'southeast')
 
 ax2 = subplot(212);
 plot(tHour, Ainputs')
@@ -75,7 +75,7 @@ title('Inputs')
 xlabel('Time [hours]')
 ylabel('Input deviation $(u - u_o)$')
 xlim([0 1]) % In hours
-legend(legInput)
+legend(legInput, 'Location', 'southeast')
 
 linkaxes([ax1 ax2],'x'); % Link x axes (not y)
 
@@ -91,7 +91,7 @@ xlabel('Time [hours]')
 ylabel('State deviation $(x - x_o)$')
 xlim([0 1]) % In hours
 ylim([-4 2])
-legend(legStates)
+legend(legStates, 'Location', 'southeast')
 
 ax2 = subplot(212);
 plot(tHour, AtildeStates')
@@ -100,7 +100,7 @@ xlabel('Time [hours]')
 ylabel('State deviation $(x - x_o)$')
 xlim([0 1]) % In hours
 ylim([-4 2])
-legend(legTildeStates)
+legend(legTildeStates, 'Location', 'southeast')
 
 linkaxes([ax1 ax2],'x'); % Link x axes (not y)
 
@@ -116,7 +116,7 @@ title('States')
 xlabel('Time [hours]')
 ylabel('State deviation $(x - x_o)$')
 xlim([0 0.002]) % In hours
-ylim([-4 1.1])
+ylim([-4 2])
 legend(legStates)
 legend(legStates, 'Location', 'southwest')
 
@@ -142,8 +142,8 @@ linkaxes([ax1 ax2],'x'); % Link x axes (not y)
 %% EXPORT
 % ---------------------------
 savepath = 'C:\Users\kaspe\Documents\Git\Repos\CA8_Writings\Graphics';
-filenames = ["fig_stateInput30h.png", "fig_stateInput1h.png", "fig_stateObsState1h.png", "fig_stateObsState002h.png"];
-myfigexport(savepath, f, filenames, "false", 'Figures', 300);
+filenames = ["fig_stateInput10h.png", "fig_stateInput1h.png", "fig_stateObsState1h.png", "fig_stateObsState002h.png"];
+myfigexport(savepath, f, filenames, "false", 'Figures', 100);
 
 % NOTE: Commit ny myfigexport funktion!!!
 
